@@ -1,0 +1,30 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+    <a href="/expenses/add" title="Nouvelle dépense" class="btn btn-primary">
+        <span class="glyphicon glyphicon-plus-sign"></span> Ajouter
+    </a>
+    <hr />
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Date</th>
+                <th>Magasin</th>
+                <th>Prix</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in pager.iterator %}
+                <tr>
+                    <td>{{ expense.name }}</td>
+                    <td>{{ expense.created | date('d/m/Y') }}</td>
+                    <td>{{ expense.shop }}</td>
+                    <td>{{ expense.price | number_format(2) }} €</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ include('pager.html.twig', { 'pager': pager }) }}
+{% endblock %}

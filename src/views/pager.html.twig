@@ -1,0 +1,21 @@
+{% if pager.getLastPage() > 1 %}
+    <ul class="pagination">
+        {% if pager.isPreviousPage() %}
+            <li><a href="?page={{ pager.page - 1 }}&limit={{ pager.maxPerPage }}">«</a></li>
+        {% else %}
+            <li class="disabled"><a href="#">«</a></li>
+        {% endif %}
+        {% for i in 1..pager.lastPage %}
+            {% if i == pager.page %}
+                <li class="active"><a href="#">{{ pager.page }} <span class="sr-only">(current)</span></a></li>
+            {% else %}
+                <li><a href="?page={{ i }}&limit={{ pager.maxPerPage }}">{{ i }}</a></li>
+            {% endif %}
+        {% endfor %}
+        {% if pager.isNextPage() %}
+            <li><a href="?page={{ pager.page + 1 }}&limit={{ pager.maxPerPage }}">»</a></li>
+        {% else %}
+            <li class="disabled"><a href="#">»</a></li>
+        {% endif %}
+    </ul}
+{% endif %}
