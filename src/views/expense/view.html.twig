@@ -21,6 +21,9 @@
 <div>
     <a href="/expenses/{{ expense.id }}/photo"><img src="/expenses/{{ expense.id }}/photo" /></a>
     <a href="/expenses/{{ expense.id }}/invoice">Facture</a>
+    {% if expense.hasNotice() %}
+        <a href="/expenses/{{ expense.id }}/notice">Notice</a>
+    {% endif %}
 </div>
 
 <div>

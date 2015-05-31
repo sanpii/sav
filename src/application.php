@@ -63,6 +63,10 @@ $app->get('/expenses/{id}/edit', function (Request $request, $id) use ($app) {
 });
 
 $app->post('/expenses/add', function (Request $request) use ($app) {
+    if ($request->files->get('notice') === null) {
+        $request->files->remove('notice');
+    }
+
     return $app->handle(
         Request::create('/expenses/-1/edit', 'POST', $request->request->all(), [], $request->files->all()),
         HttpKernelInterface::SUB_REQUEST
@@ -86,7 +90,7 @@ $app->post('/expenses/{id}/edit', function (Request $request, $id) use ($app) {
         $expense = $map->createAndSave($data);
     }
 
-    foreach (['photo', 'invoice'] as $type) {
+    foreach (['photo', 'invoice', 'notice'] as $type) {
         $file = $request->files->get($type);
         if ($file !== null) {
             $file->move(__DIR__ . '/../data/' . $expense->getId(), $type);
