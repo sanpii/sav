@@ -18,11 +18,17 @@
         <tbody>
             {% for expense in pager.iterator %}
                 <tr>
-                    <td>{{ expense.name }}</td>
+                    <td><a href="#detail-{{ expense.id }}">{{ expense.name }}</a></td>
                     <td>{{ expense.created | date('d/m/Y') }}</td>
                     <td>{{ expense.shop }}</td>
                     <td>{{ expense.price | number_format(2) }} €</td>
                 </tr>
+                <div id="detail-{{ expense.id }}" class="overlay">
+                    <div class="content">
+                        <a href="#" class="close"><i class="glyphicon glyphicon-remove"></i></a>
+                        {{ include('expense/view.html.twig', { 'expense': expense }) }}
+                    </div>
+                </div>
             {% endfor %}
         </tbody>
     </table>

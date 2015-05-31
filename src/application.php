@@ -3,6 +3,7 @@
 use \PommProject\Foundation\Where;
 use \Symfony\Component\HttpFoundation\Request;
 use \Symfony\Component\HttpKernel\HttpKernelInterface;
+use \Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 $app = require __DIR__ . '/bootstrap.php';
 
@@ -96,6 +97,11 @@ $app->post('/expenses/{id}/edit', function (Request $request, $id) use ($app) {
         ->add('success', 'Achat sauvegardé');
 
     return $app->redirect('/');
+});
+
+$app->get('/expenses/{id}/{type}', function (Request $request, $id, $type) use ($app) {
+    $file = __DIR__ . "/../data/$id/$type";
+    return new BinaryFileResponse($file, 200);
 });
 
 return $app;

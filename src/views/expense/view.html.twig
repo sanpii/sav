@@ -1,0 +1,21 @@
+<h1>
+    {% if expense.url is not null %}
+        <a href="{{ expense.url }}">{{ expense.name }}</a>
+    {% else %}
+        {{ expense.name }}
+    {% endif %}
+</h1>
+
+<div>
+    Acheté le {{ expense.created | date('d/m/Y') }} chez {{ expense.shop }} pour {{ expense.price }} €
+</div>
+
+<div>
+    <a href="/expenses/{{ expense.id }}/photo"><img src="/expenses/{{ expense.id }}/photo" /></a>
+    <a href="/expenses/{{ expense.id }}/invoice">Facture</a>
+</div>
+
+<div>
+    <a href="/expenses/{{ expense.id }}/edit" class="btn btn-primary"><span class="glyphicon glyphicon-edit"></span></a>
+    <a onclick="return confirm('Êtes vous sûr ?');" href="/expenses/{{ expense.id }}/delete" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></a>
+</div>
