@@ -1,3 +1,7 @@
+.trashed {
+    text-decoration: line-through;
+}
+
 .overlay {
     display: none;
 }

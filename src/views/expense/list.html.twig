@@ -17,7 +17,7 @@
         </thead>
         <tbody>
             {% for expense in pager.iterator %}
-                <tr class="{{ expense.warranty_active ? 'success' : 'danger' }}">
+                <tr class="{{ expense.warranty_active ? 'success' : 'danger' }} {{ expense.trashed ? 'trashed' : '' }}">
                     <td><a href="#detail-{{ expense.id }}">{{ expense.name }}</a></td>
                     <td>{{ expense.created | date('d/m/Y') }}</td>
                     <td>{{ expense.shop }}</td>
