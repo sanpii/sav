@@ -99,6 +99,24 @@ $app->post('/expenses/{id}/edit', function (Request $request, $id) use ($app) {
     return $app->redirect('/');
 });
 
+$app->get('/expenses/{id}/delete', function (Request $request, $id) use ($app) {
+    $map = $app['db']->getModel('\Model\ExpenseModel');
+
+    $pk = compact('id');
+    $expense = $map->findByPk($pk);
+    if ($expense !== null) {
+        $map->deleteOne($expense);
+
+        $app['session']->getFlashBag()
+            ->add('success', 'Achat supprimé');
+    }
+    else {
+        $app->abort(404, "Achat #$id inconnu");
+    }
+
+    return $app->redirect('/');
+});
+
 $app->get('/expenses/{id}/{type}', function (Request $request, $id, $type) use ($app) {
     $file = __DIR__ . "/../data/$id/$type";
     return new BinaryFileResponse($file, 200);
