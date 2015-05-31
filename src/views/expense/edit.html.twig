@@ -1,0 +1,145 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+
+    {% if expense.id > 0 %}
+        <form method="post" action="/expenses/{{ expense.id }}/edit" class="form-horizontal" role="form" enctype="multipart/form-data">
+            <input type="hidden" name="expense[id]" value="{{ expense.id }}" />
+    {% else %}
+        <form method="post" action="/expenses/add" class="form-horizontal" role="form" enctype="multipart/form-data">
+    {% endif %}
+
+        <div class="form-group">
+            <label for="expense[name]" class="col-lg-2">Nom</label>
+            <div class="col-lg-10">
+                <input
+                    type="text"
+                    value="{{ expense.name }}"
+                    name="expense[name]"
+                    required="required"
+                    class="form-control"
+                />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="expense[serial]" class="col-lg-2">Numéro de série</label>
+            <div class="col-lg-10">
+                <input
+                    type="text"
+                    value="{{ expense.serial }}"
+                    name="expense[serial]"
+                    class="form-control"
+                />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="expense[url]" class="col-lg-2">URL</label>
+            <div class="col-lg-10">
+                <input
+                    type="text"
+                    value="{{ expense.url }}"
+                    name="expense[url]"
+                    class="form-control"
+                />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="expense[price]" class="col-lg-2">Prix</label>
+            <div class="col-lg-10">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        name="expense[price]"
+                        value="{{ expense.price }}"
+                        class="form-control"
+                        required="required"
+                        pattern="[0-9]+(\.[0-9][0-9]?)?"
+                        autocomplete="off"
+                    />
+                    <span class="input-group-addon">€</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="expense[shop]" class="col-lg-2">Magasin</label>
+            <div class="col-lg-10">
+                <input
+                    type="text"
+                    name="expense[shop]"
+                    value="{{ expense.shop }}"
+                    class="form-control"
+                    required="required"
+                />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="expense[warranty]" class="col-lg-2">Garantie</label>
+            <div class="col-lg-10">
+                <input
+                    type="date"
+                    value="{{ expense.warranty ? expense.warranty.format('%d days, %m months, %y years') : '' }}"
+                    name="expense[warranty]"
+                    required="required"
+                    class="form-control"
+                />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="photo" class="col-lg-2">Photo</label>
+            <div class="col-lg-10">
+                <input type="file" name="photo" accept="image/*"
+                    {% if expense.id < 0 %}
+                        required="required"
+                    {% endif %}
+                />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="invoice" class="col-lg-2">Facture</label>
+            <div class="col-lg-10">
+                <input type="file" name="invoice" accept="image/*,.pdf"
+                    {% if expense.id < 0 %}
+                        required="required"
+                    {% endif %}
+                />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="expense[created]" class="col-lg-2">Date</label>
+            <div class="col-lg-10">
+                <input
+                    type="date"
+                    value="{{ expense.created|date('d-m-Y') }}"
+                    name="expense[created]"
+                    required="required"
+                    class="form-control"
+                />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="expense[trashed]" class="col-lg-2">Jeté</label>
+            <div class="col-lg-10">
+                <input type="hidden" value="off" name="expense[trashed]" />
+                <input type="checkbox" name="expense[trashed]"
+                    {% if expense.trashed %}
+                        checked="checked"
+                    {% endif %}
+                />
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+            <a href="/" class="btn btn-default">Annuler</a>
+        </div>
+    </form>
+{% endblock %}

@@ -2,6 +2,7 @@
 
 use \PommProject\Foundation\Where;
 use \Symfony\Component\HttpFoundation\Request;
+use \Symfony\Component\HttpKernel\HttpKernelInterface;
 
 $app = require __DIR__ . '/bootstrap.php';
 
@@ -22,6 +23,79 @@ $app->get('/', function (Request $request) use($app) {
         'expense/list.html.twig',
         compact('pager')
     );
+});
+
+$app->get('/expenses/add', function (Request $request) use ($app) {
+    return $app->handle(
+        Request::create('/expenses/-1/edit', 'GET'),
+        HttpKernelInterface::SUB_REQUEST
+    );
+});
+
+$app->get('/expenses/{id}/edit', function (Request $request, $id) use ($app) {
+    $map = $app['db']->getModel('\Model\ExpenseModel');
+
+    if ($id > 0) {
+        $expense = $map->findByPk(compact('id'));
+        if (is_null($expense)) {
+            $app->abort(404, "Achat #$id inconnu");
+        }
+    }
+    else {
+        $expense = $map->createEntity([
+            'id' => $id,
+            'created' => 'now',
+            'serial' => '',
+            'name' => '',
+            'url' => '',
+            'shop' => '',
+            'warranty' => '',
+            'price' => 0,
+            'trashed' => false,
+        ]);
+    }
+
+    return $app['twig']->render(
+        'expense/edit.html.twig',
+        compact('expense')
+    );
+});
+
+$app->post('/expenses/add', function (Request $request) use ($app) {
+    return $app->handle(
+        Request::create('/expenses/-1/edit', 'POST', $request->request->all(), [], $request->files->all()),
+        HttpKernelInterface::SUB_REQUEST
+    );
+});
+
+$app->post('/expenses/{id}/edit', function (Request $request, $id) use ($app) {
+    $map = $app['db']->getModel('\Model\ExpenseModel');
+    $data = $request->request->get('expense');
+    $data['warranty'] = \DateInterval::createFromDateString($data['warranty']);
+
+    if ($id > 0) {
+        $pk = compact('id');
+        $expense = $map->findByPk($pk);
+        if (is_null($expense)) {
+            $app->abort(404, "Achat #$id inconnu");
+        }
+        $map->updateByPk($pk, $data);
+    }
+    else {
+        $expense = $map->createAndSave($data);
+    }
+
+    foreach (['photo', 'invoice'] as $type) {
+        $file = $request->files->get($type);
+        if ($file !== null) {
+            $file->move(__DIR__ . '/../data/' . $expense->getId(), $type);
+        }
+    }
+
+    $app['session']->getFlashBag()
+        ->add('success', 'Achat sauvegardé');
+
+    return $app->redirect('/');
 });
 
 return $app;
