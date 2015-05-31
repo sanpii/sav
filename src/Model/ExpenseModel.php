@@ -35,4 +35,12 @@ class ExpenseModel extends Model
         $this->structure = new ExpenseStructure;
         $this->flexible_entity_class = '\Model\Expense';
     }
+
+    public function createProjection()
+    {
+        return parent::createProjection()
+            ->setField('warranty_at', 'created + warranty', 'date')
+            ->setField('warranty_active', 'created + warranty > now()', 'boolean')
+            ->setField('warranty_end', '-age(created + warranty)', 'interval');
+    }
 }

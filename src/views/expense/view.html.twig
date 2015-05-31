@@ -11,6 +11,14 @@
 </div>
 
 <div>
+    {% if expense.warranty_active %}
+        Garantie jusqu’au {{ expense.warranty_at | date('d/m/Y') }} soit {{ expense.warranty_end.format('%d jours, %m mois, %y années') }}
+    {% else %}
+        <strong>Garantie terminée</strong>
+    {% endif %}
+</div>
+
+<div>
     <a href="/expenses/{{ expense.id }}/photo"><img src="/expenses/{{ expense.id }}/photo" /></a>
     <a href="/expenses/{{ expense.id }}/invoice">Facture</a>
 </div>
