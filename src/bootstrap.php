@@ -18,7 +18,7 @@ $app['config'] = $app->share(function () {
         throw new \RunTimeException('No current configuration file found in config.');
     }
 
-    $config = Yaml::parse(__DIR__ . '/config/parameters.yml');
+    $config = Yaml::parse(file_get_contents(__DIR__ . '/config/parameters.yml'));
     $parameters = $config['parameters'];
 
     $parameters['pomm'] = [
