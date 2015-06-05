@@ -63,6 +63,9 @@ $app->get('/expenses/{id}/edit', function (Request $request, $id) use ($app) {
 });
 
 $app->post('/expenses/add', function (Request $request) use ($app) {
+    if ($request->files->get('invoice') === null) {
+        $request->files->remove('invoice');
+    }
     if ($request->files->get('notice') === null) {
         $request->files->remove('notice');
     }

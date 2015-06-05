@@ -104,11 +104,7 @@
         <div class="form-group">
             <label for="invoice" class="col-lg-2">Facture</label>
             <div class="col-lg-10">
-                <input type="file" name="invoice" accept="image/*,.pdf"
-                    {% if expense.id < 0 %}
-                        required="required"
-                    {% endif %}
-                />
+                <input type="file" name="invoice" accept="image/*,.pdf" />
             </div>
         </div>
 
