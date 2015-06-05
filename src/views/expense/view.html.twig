@@ -12,7 +12,7 @@
 
 <div>
     {% if expense.warranty_active %}
-        Garantie jusqu’au {{ expense.warranty_at | date('d/m/Y') }} soit {{ expense.warranty_end.format('%d jours, %m mois, %y années') }}
+        Garantie jusqu’au {{ expense.warranty_at | date('d/m/Y') }}
     {% else %}
         <strong>Garantie terminée</strong>
     {% endif %}
