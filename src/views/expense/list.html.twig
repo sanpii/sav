@@ -13,6 +13,7 @@
                 <th>Date</th>
                 <th>Magasin</th>
                 <th>Prix</th>
+                <th>Notice</th>
             </tr>
         </thead>
         <tbody>
@@ -22,6 +23,7 @@
                     <td>{{ expense.created | date('d/m/Y') }}</td>
                     <td>{{ expense.shop }}</td>
                     <td>{{ expense.price | number_format(2) }} €</td>
+                    <td><span class="glyphicon glyphicon-{{ expense.hasNotice() ? 'check' : 'unchecked' }}"></span></td>
                 </tr>
                 <div id="detail-{{ expense.id }}" class="overlay">
                     <div class="content">
