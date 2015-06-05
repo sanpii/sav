@@ -2,6 +2,11 @@
     text-decoration: line-through;
 }
 
+.table > tbody > tr > td.overlay,
+.table > tbody > tr > td.overlay:hover {
+    background: none;
+}
+
 .overlay {
     display: none;
 }
