@@ -22,7 +22,7 @@ $app['config'] = $app->share(function () {
     $parameters = $config['parameters'];
 
     $parameters['pomm'] = [
-        $parameters['project_name'] => [
+        $parameters['database_name'] => [
             'class:session_builder' => '\PommProject\ModelManager\SessionBuilder',
             'dsn' => sprintf(
                 "pgsql://%s:%s@%s:%s/%s",
