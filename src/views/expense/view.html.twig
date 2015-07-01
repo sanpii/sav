@@ -35,10 +35,10 @@
         {{ self.form_control('Garantie', ' <strong>terminée</strong>') }}
     {% endif %}
 
-    {{ self.form_control('', '<a href="/expenses/{{ expense.id }}/invoice">Facture</a>') }}
+    {{ self.form_control('', '<a href="/expenses/' ~ expense.id ~ '/invoice">Facture</a>') }}
 
     {% if expense.hasNotice() %}
-        {{ self.form_control('', '<a href="/expenses/{{ expense.id }}/notice">Notice</a>') }}
+        {{ self.form_control('', '<a href="/expenses/' ~ expense.id ~ '/notice">Notice</a>') }}
     {% endif %}
 
     <div class="form-group">
