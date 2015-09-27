@@ -10,7 +10,7 @@ $app = require __DIR__ . '/bootstrap.php';
 $app->get('/', function (Request $request) use($app) {
     $page = $request->get('page', 1);
     $trashed = $request->get('trashed', false);
-    $limit = $request->get('limit', 20);
+    $limit = $request->get('limit', 50);
 
     $pager = $app['db']->getModel('\Model\ExpenseModel')
         ->paginateFindWhere(
