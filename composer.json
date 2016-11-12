@@ -7,7 +7,6 @@
         "pomm-project/model-manager": "~2.0",
         "pomm-project/pomm-service-provider": "dev-silex-2",
         "twig/twig": "~1.18",
-        "incenteev/composer-parameter-handler": "~2.1",
         "symfony/yaml": "~2.6"
     },
     "require-dev": {
@@ -24,9 +23,6 @@
         "psr-4": { "Test\\": "tests" }
     },
     "extra": {
-        "symfony-web-dir": "web",
-        "incenteev-parameters": {
-            "file": "src/config/parameters.yml"
-        }
+        "symfony-web-dir": "web"
     }
 }
