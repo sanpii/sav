@@ -1,19 +1,17 @@
 <?php
 
 use \Symfony\Component\Yaml\Yaml;
-use \Silex\Provider\TwigServiceProvider;
-use \Silex\Provider\SessionServiceProvider;
-use \Silex\Provider\WebProfilerServiceProvider;
-use \Silex\Provider\UrlGeneratorServiceProvider;
-use \Silex\Provider\ServiceControllerServiceProvider;
-use \PommProject\Silex\ServiceProvider\PommServiceProvider;
-use \PommProject\Silex\ProfilerServiceProvider\PommProfilerServiceProvider;
+use \Silex\Provider;
+use \PommProject\Silex\ {
+    ServiceProvider\PommServiceProvider,
+    ProfilerServiceProvider\PommProfilerServiceProvider
+};
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $app = new Silex\Application();
 
-$app['config'] = $app->share(function () {
+$app['config'] = function () {
     if (!is_file(__DIR__ . '/config/parameters.yml')) {
         throw new \RunTimeException('No current configuration file found in config.');
     }
@@ -36,13 +34,15 @@ $app['config'] = $app->share(function () {
     ];
 
     return $parameters;
-});
+};
 
-$app['debug'] = $app['config']['debug'];
+$app['debug'] = function () {
+    return getenv('APP_DEBUG') !== 0 && getenv('APP_ENVIRONMENT') !== 'prod';
+};
 
-$app->register(new SessionServiceProvider);
+$app->register(new Provider\SessionServiceProvider);
 
-$app->register(new TwigServiceProvider(), array(
+$app->register(new Provider\TwigServiceProvider, array(
     'twig.path' => __DIR__ . '/views',
 ));
 
@@ -55,14 +55,14 @@ $app['db'] = function () use($app) {
 };
 
 if (class_exists('\Silex\Provider\WebProfilerServiceProvider')) {
-    $app->register(new UrlGeneratorServiceProvider);
-    $app->register(new ServiceControllerServiceProvider);
+    $app->register(new Provider\ServiceControllerServiceProvider);
+    $app->register(new Provider\HttpFragmentServiceProvider);
 
-    $profiler = new WebProfilerServiceProvider();
+    $profiler = new Provider\WebProfilerServiceProvider();
     $app->register($profiler, array(
         'profiler.cache_dir' => __DIR__ . '/../cache/profiler',
+        'profiler.mount_prefix' => '/_profiler',
     ));
-    $app->mount('/_profiler', $profiler);
 
     $app->register(new PommProfilerServiceProvider);
 }
