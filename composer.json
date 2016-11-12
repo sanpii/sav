@@ -7,23 +7,12 @@
         "pomm-project/model-manager": "~2.0",
         "pomm-project/pomm-service-provider": "dev-silex-2",
         "twig/twig": "~1.18",
-        "symfony/yaml": "~2.6",
         "incenteev/composer-parameter-handler": "~2.1",
-        "sanpi/twitter-bootstrap-installer": "~1.1"
+        "symfony/yaml": "~2.6"
     },
     "require-dev": {
         "pomm-project/cli": "~2.0",
         "pomm-project/pomm-profiler-service-provider": "dev-silex-2"
-    },
-    "scripts": {
-        "post-install-cmd": [
-            "Sanpi\\TwitterBootstrap\\Composer\\ScriptHandler::postInstall",
-            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters"
-        ],
-        "post-update-cmd": [
-            "Sanpi\\TwitterBootstrap\\Composer\\ScriptHandler::postUpdate",
-            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters"
-        ]
     },
     "config": {
         "bin-dir": "bin"
