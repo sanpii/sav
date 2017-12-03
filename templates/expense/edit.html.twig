@@ -81,7 +81,6 @@
             <label for="expense[warranty]" class="col-lg-2">Garantie</label>
             <div class="col-lg-10">
                 <input
-                    type="date"
                     value="{{ expense.warranty ? expense.warranty.format('%d days, %m months, %y years') : '' }}"
                     name="expense[warranty]"
                     required="required"
@@ -120,7 +119,7 @@
             <div class="col-lg-10">
                 <input
                     type="date"
-                    value="{{ expense.created|date('d-m-Y') }}"
+                    value="{{ expense.created|date('Y-m-d') }}"
                     name="expense[created]"
                     required="required"
                     class="form-control"
