@@ -5,4 +5,4 @@ services:
 
     app.controller.expenses:
         class: App\Controller\Expenses
-        arguments: ['@templating', '@pomm']
+        arguments: ['@templating', '@pomm', '%env(DATA_DIR)%']

@@ -18,11 +18,13 @@ class Expenses implements ContainerAwareInterface
 
     private $pomm;
     private $templating;
+    private $data_dir;
 
-    public function __construct(EngineInterface $templating, Pomm $pomm)
+    public function __construct(EngineInterface $templating, Pomm $pomm, string $data_dir)
     {
         $this->templating = $templating;
         $this->pomm = $pomm;
+        $this->data_dir = $data_dir;
     }
 
     public function add(): Response
@@ -163,7 +165,7 @@ class Expenses implements ContainerAwareInterface
 
     public function media(int $id, string $type): Response
     {
-        $file = __DIR__ . "/../../data/$id/$type";
+        $file = $this->data_dir . "/$id/$type";
         return new BinaryFileResponse($file, 200);
     }
 }
