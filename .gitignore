@@ -1,8 +1,13 @@
 /bin/
-/cache/
 /composer.lock
 /composer.phar
 /data/
-/src/config/parameters.yml
+/public/lib/
+/symfony.lock
+
+###> symfony/framework-bundle ###
+.env
+/public/bundles/
+/var/
 /vendor/
-/web/lib/
+###< symfony/framework-bundle ###
