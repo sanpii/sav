@@ -1,6 +1,5 @@
 {
     "name": "sanpi/sav",
-    "keywords": ["silex", "pomm", "bootstrap", "atoum", "behat", "skeleton"],
     "license": "MIT",
     "require": {
         "silex/silex": "~2.0",
