@@ -5,7 +5,7 @@
  * generation.
  */
 
-namespace Model\AutoStructure;
+namespace App\Model\AutoStructure;
 
 use PommProject\ModelManager\Model\RowStructure;
 
