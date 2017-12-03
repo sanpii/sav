@@ -1,0 +1,8 @@
+services:
+    app.controller.index:
+        class: App\Controller\Index
+        arguments: ['@templating', '@pomm']
+
+    app.controller.expenses:
+        class: App\Controller\Expenses
+        arguments: ['@templating', '@pomm', '%env(DATA_DIR)%']
