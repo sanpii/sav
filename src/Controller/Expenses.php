@@ -42,7 +42,7 @@ class Expenses implements ContainerAwareInterface
         }
         if ($request->files->get('notice') === null) {
             $request->files->remove('notice');
-    }
+        }
 
         return $this->forward(
             'app.controller.expenses:save',
