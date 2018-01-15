@@ -10,6 +10,7 @@ use \Symfony\Component\HttpFoundation\Request;
 use \Symfony\Component\HttpFoundation\{Response, BinaryFileResponse};
 use \Symfony\Component\HttpKernel\HttpKernelInterface;
 use \Symfony\Component\Templating\EngineInterface;
+use \Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Expenses implements ContainerAwareInterface
 {
@@ -57,7 +58,7 @@ class Expenses implements ContainerAwareInterface
         if ($id > 0) {
             $expense = $map->findByPk(compact('id'));
             if (is_null($expense)) {
-                throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException("Achat #$id inconnu");
+                throw new NotFoundHttpException("Achat #$id inconnu");
             }
         }
         else {
@@ -90,7 +91,7 @@ class Expenses implements ContainerAwareInterface
             $pk = compact('id');
             $expense = $map->findByPk($pk);
             if (is_null($expense)) {
-                throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException("Achat #$id inconnue");
+                throw new NotFoundHttpException("Achat #$id inconnue");
             }
             $map->updateByPk($pk, $data);
         }
@@ -121,7 +122,7 @@ class Expenses implements ContainerAwareInterface
             $this->addFlash('success', 'Achat supprimé');
         }
         else {
-            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException("Achat #$id inconnu");
+            throw new NotFoundHttpException("Achat #$id inconnu");
         }
 
         return $this->redirect('/');
@@ -139,7 +140,7 @@ class Expenses implements ContainerAwareInterface
             $this->addFlash('success', 'Achat jeté');
         }
         else {
-            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException("Achat #$id inconnu");
+            throw new NotFoundHttpException("Achat #$id inconnu");
         }
 
         return $this->redirect('/');
@@ -157,7 +158,7 @@ class Expenses implements ContainerAwareInterface
             $this->addFlash('success', 'Achat recyclé');
         }
         else {
-            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException("Achat #$id inconnu");
+            throw new NotFoundHttpException("Achat #$id inconnu");
         }
 
         return $this->redirect('/');
@@ -167,7 +168,7 @@ class Expenses implements ContainerAwareInterface
     {
         $file = $this->data_dir . "/$id/$type";
         if (!is_file($file)) {
-            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException("$type #$id inconnu·e");
+            throw new NotFoundHttpException("$type #$id inconnu·e");
         }
 
         return new BinaryFileResponse($file, 200);
