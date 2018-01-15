@@ -166,6 +166,10 @@ class Expenses implements ContainerAwareInterface
     public function media(int $id, string $type): Response
     {
         $file = $this->data_dir . "/$id/$type";
+        if (!is_file($file)) {
+            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException("$type #$id inconnu·e");
+        }
+
         return new BinaryFileResponse($file, 200);
     }
 }
