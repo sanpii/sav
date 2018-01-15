@@ -1,0 +1,8 @@
+monolog:
+    handlers:
+        main:
+            type: stream
+            action_level: error
+            excluded_404s:
+                # regex: exclude all 404 errors from the logs
+                - ^/
