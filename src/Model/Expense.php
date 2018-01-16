@@ -16,6 +16,7 @@ class Expense extends FlexibleEntity
 {
     public function hasNotice()
     {
-        return is_file(__DIR__ . '/../../data/' . $this->getId() . '/notice');
+        $data_dir = getenv('DATA_DIR');
+        return is_file($data_dir . '/' . $this->getId() . '/notice');
     }
 }
