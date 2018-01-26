@@ -45,7 +45,7 @@ class Expense extends RowStructure
             ->addField('shop', 'varchar')
             ->addField('warranty', 'interval')
             ->addField('price', 'float4')
-            ->addField('trashed', 'boolean')
+            ->addField('trashed_at', 'timestamp')
             ;
     }
 }

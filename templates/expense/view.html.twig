@@ -9,7 +9,7 @@
 
 {% import _self as self %}
 
-<h1 class="{{ expense.trashed ? 'trashed' : '' }}">
+<h1 class="{{ expense.trashed_at ? 'trashed_at' : '' }}">
     {% if expense.url is not null %}
         <a href="{{ expense.url }}">{{ expense.name }}</a>
     {% else %}

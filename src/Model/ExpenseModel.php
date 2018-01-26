@@ -39,6 +39,7 @@ class ExpenseModel extends Model
     public function createProjection()
     {
         return parent::createProjection()
+            ->setField('trashed', 'trashed_at is not null', 'boolean')
             ->setField('warranty_at', 'created + warranty', 'date')
             ->setField('warranty_active', 'created + warranty > now()', 'boolean');
     }

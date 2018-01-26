@@ -135,7 +135,7 @@ class Expenses implements ContainerAwareInterface
         $pk = compact('id');
         $expense = $map->findByPk($pk);
         if ($expense !== null) {
-            $map->updateByPk($pk, ['trashed' => true]);
+            $map->updateByPk($pk, ['trashed_at' => new \DateTime()]);
 
             $this->addFlash('success', 'Achat jeté');
         }
@@ -153,7 +153,7 @@ class Expenses implements ContainerAwareInterface
         $pk = compact('id');
         $expense = $map->findByPk($pk);
         if ($expense !== null) {
-            $map->updateByPk($pk, ['trashed' => false]);
+            $map->updateByPk($pk, ['trashed_at' => null]);
 
             $this->addFlash('success', 'Achat recyclé');
         }

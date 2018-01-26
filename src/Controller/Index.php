@@ -26,9 +26,16 @@ class Index
         $trashed = $request->get('trashed', false);
         $limit = $request->get('limit', 50);
 
+        if ($trashed) {
+            $where = new Where('trashed_at IS NOT NULL');
+        }
+        else {
+            $where = new Where('trashed_at IS NULL');
+        }
+
         $pager = $this->pomm['db']->getModel('\App\Model\ExpenseModel')
             ->paginateFindWhere(
-                new Where('trashed = $*', [(int)$trashed]),
+                $where,
                 $limit,
                 $page,
                 'ORDER BY created DESC'
