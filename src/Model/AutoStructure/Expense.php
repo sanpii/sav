@@ -38,7 +38,7 @@ class Expense extends RowStructure
             ->setRelation('public.expense')
             ->setPrimaryKey(['id'])
             ->addField('id', 'int4')
-            ->addField('created', 'timestamp')
+            ->addField('created_at', 'timestamp')
             ->addField('serial', 'varchar')
             ->addField('name', 'varchar')
             ->addField('url', 'varchar')

@@ -115,12 +115,12 @@
         </div>
 
         <div class="form-group">
-            <label for="expense[created]" class="col-lg-2">Date</label>
+            <label for="expense[created_at]" class="col-lg-2">Date</label>
             <div class="col-lg-10">
                 <input
                     type="date"
-                    value="{{ expense.created|date('Y-m-d') }}"
-                    name="expense[created]"
+                    value="{{ expense.created_at|date('Y-m-d') }}"
+                    name="expense[created_at]"
                     required="required"
                     class="form-control"
                 />

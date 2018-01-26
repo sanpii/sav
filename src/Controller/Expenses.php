@@ -64,7 +64,7 @@ class Expenses implements ContainerAwareInterface
         else {
             $expense = $map->createEntity([
                 'id' => $id,
-                'created' => 'now',
+                'created_at' => 'now',
                 'serial' => '',
                 'name' => '',
                 'url' => '',

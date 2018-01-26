@@ -21,7 +21,7 @@
     <div class="form-group">
         <label class="col-sm-2 control-label"></label>
         <div class="col-sm-8">
-            Acheté le {{ expense.created | date('d/m/Y') }} chez {{ expense.shop }} pour {{ expense.price }} €
+            Acheté le {{ expense.created_at | date('d/m/Y') }} chez {{ expense.shop }} pour {{ expense.price }} €
         </div>
     </div>
 

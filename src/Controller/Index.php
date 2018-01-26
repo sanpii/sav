@@ -38,7 +38,7 @@ class Index
                 $where,
                 $limit,
                 $page,
-                'ORDER BY created DESC'
+                'ORDER BY created_at DESC'
             );
 
         return new Response(
