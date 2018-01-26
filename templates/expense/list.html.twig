@@ -4,7 +4,6 @@
     <a href="/expenses/add" title="Nouvelle dépense" class="btn btn-primary">
         <span class="glyphicon glyphicon-plus-sign"></span> Ajouter
     </a>
-    <hr />
 
     <table class="table table-hover">
         <thead>
@@ -18,7 +17,7 @@
         </thead>
         <tbody>
             {% for expense in pager.iterator %}
-                <tr class="{{ expense.warranty_active ? 'success' : 'danger' }} {{ expense.trashed ? 'trashed' : '' }}">
+                <tr class="list-group-item-{{ expense.warranty_active ? 'success' : 'danger' }} {{ expense.trashed ? 'trashed' : '' }}">
                     <td><a href="#detail-{{ expense.id }}">{{ expense.name }}</a></td>
                     <td>{{ expense.created | date('d/m/Y') }}</td>
                     <td>{{ expense.shop }}</td>
@@ -26,7 +25,7 @@
                     <td><span class="glyphicon glyphicon-{{ expense.hasNotice() ? 'check' : 'unchecked' }}"></span></td>
                     <td id="detail-{{ expense.id }}" class="overlay">
                         <div class="content">
-                            <a href="#" class="close"><i class="glyphicon glyphicon-remove"></i></a>
+                            <a href="#" class="close"><span aria-hidden="true">&times;</span></a>
                             {{ include('expense/view.html.twig', { 'expense': expense }) }}
                         </div>
                     </td>

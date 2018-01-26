@@ -2,6 +2,10 @@
     text-decoration: line-through;
 }
 
+.table {
+    margin-top: 1rem;
+}
+
 .table > tbody > tr > td.overlay,
 .table > tbody > tr > td.overlay:hover {
     background: none;
@@ -23,6 +27,7 @@
 }
 
 .overlay .content {
+    color: black;
     margin: 0 auto;
     max-width: 640px;
     max-height: 780px;
