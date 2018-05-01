@@ -102,7 +102,7 @@ class Expenses implements ContainerAwareInterface
         foreach (['photo', 'invoice', 'notice'] as $type) {
             $file = $request->files->get($type);
             if ($file !== null) {
-                $file->move(__DIR__ . '/../data/' . $expense->getId(), $type);
+                $file->move($this->data_dir . '/' . $expense->getId(), $type);
             }
         }
 
