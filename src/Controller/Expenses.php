@@ -71,7 +71,7 @@ class Expenses implements ContainerAwareInterface
                 'shop' => '',
                 'warranty' => '',
                 'price' => 0,
-                'trashed' => false,
+                'trashed_at' => null,
             ]);
         }
 
