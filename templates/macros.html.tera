@@ -1,0 +1,8 @@
+{% macro form_control(label, value) %}
+    <div class="form-group">
+        <label class="col-sm-2 control-label">{{ label }}</label>
+        <div class="col-sm-6">
+            <p class="form-control-static">{{ value | safe }}</p>
+        </div>
+    </div>
+{% endmacro %}

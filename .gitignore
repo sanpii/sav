@@ -1,13 +1,5 @@
-/bin/
-/composer.lock
-/composer.phar
-/data/
-/public/lib/
-/symfony.lock
-
-###> symfony/framework-bundle ###
-.env
-/public/bundles/
-/var/
-/vendor/
-###< symfony/framework-bundle ###
+/.env
+/Cargo.lock
+/static/lib
+/target
+**/*.rs.bk

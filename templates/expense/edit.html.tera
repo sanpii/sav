@@ -1,21 +1,25 @@
-{% extends "base.html.twig" %}
+{% extends "base" %}
 
 {% block content %}
 
-    {% if expense.id > 0 %}
-        <form method="post" action="/expenses/{{ expense.id }}/edit" class="form-horizontal" role="form" enctype="multipart/form-data">
-            <input type="hidden" name="expense[id]" value="{{ expense.id }}" />
+    {% if id %}
+        {% set action = "/expenses/" ~ id ~ "/edit" %}
     {% else %}
-        <form method="post" action="/expenses/add" class="form-horizontal" role="form" enctype="multipart/form-data">
+        {% set action = "/expenses/add" %}
     {% endif %}
 
+    <form method="post" action="{{ action }}" class="form-horizontal" role="form" enctype="multipart/form-data">
+        {% if id %}
+            <input type="hidden" name="id" value="{{ id }}" />
+        {% endif %}
+
         <div class="form-group">
-            <label for="expense[name]" class="col-lg-2">Nom</label>
+            <label for="name" class="col-lg-2">Nom</label>
             <div class="col-lg-10">
                 <input
                     type="text"
-                    value="{{ expense.name }}"
-                    name="expense[name]"
+                    value="{{ name|default(value="") }}"
+                    name="name"
                     required="required"
                     class="form-control"
                 />
@@ -23,37 +27,37 @@
         </div>
 
         <div class="form-group">
-            <label for="expense[serial]" class="col-lg-2">Numéro de série</label>
+            <label for="serial" class="col-lg-2">Numéro de série</label>
             <div class="col-lg-10">
                 <input
                     type="text"
-                    value="{{ expense.serial }}"
-                    name="expense[serial]"
+                    value="{{ serial|default(value="") }}"
+                    name="serial"
                     class="form-control"
                 />
             </div>
         </div>
 
         <div class="form-group">
-            <label for="expense[url]" class="col-lg-2">URL</label>
+            <label for="url" class="col-lg-2">URL</label>
             <div class="col-lg-10">
                 <input
                     type="text"
-                    value="{{ expense.url }}"
-                    name="expense[url]"
+                    value="{{ url|default(value="") }}"
+                    name="url"
                     class="form-control"
                 />
             </div>
         </div>
 
         <div class="form-group">
-            <label for="expense[price]" class="col-lg-2">Prix</label>
+            <label for="price" class="col-lg-2">Prix</label>
             <div class="col-lg-10">
                 <div class="input-group">
                     <input
                         type="text"
-                        name="expense[price]"
-                        value="{{ expense.price }}"
+                        name="price"
+                        value="{{ price | default(value=0) | round(precision=2) }}"
                         class="form-control"
                         required="required"
                         pattern="[0-9]+(\.[0-9][0-9]?)?"
@@ -65,12 +69,12 @@
         </div>
 
         <div class="form-group">
-            <label for="expense[shop]" class="col-lg-2">Magasin</label>
+            <label for="shop" class="col-lg-2">Magasin</label>
             <div class="col-lg-10">
                 <input
                     type="text"
-                    name="expense[shop]"
-                    value="{{ expense.shop }}"
+                    name="shop"
+                    value="{{ shop|default(value="") }}"
                     class="form-control"
                     required="required"
                 />
@@ -78,11 +82,11 @@
         </div>
 
         <div class="form-group">
-            <label for="expense[warranty]" class="col-lg-2">Garantie</label>
+            <label for="warranty" class="col-lg-2">Garantie (en années)</label>
             <div class="col-lg-10">
                 <input
-                    value="{{ expense.warranty ? expense.warranty.format('%d days, %m months, %y years') : '' }}"
-                    name="expense[warranty]"
+                    value="{{ warranty|default(value=0) }}"
+                    name="warranty"
                     required="required"
                     class="form-control"
                 />
@@ -92,8 +96,8 @@
         <div class="form-group">
             <label for="photo" class="col-lg-2">Photo</label>
             <div class="col-lg-10">
-                <input type="file" name="photo" accept="image/*"
-                    {% if expense.id < 0 %}
+                <input type="file" name="photo" accept="image/*" multiple
+                    {% if not id %}
                         required="required"
                     {% endif %}
                 />
@@ -103,24 +107,24 @@
         <div class="form-group">
             <label for="invoice" class="col-lg-2">Facture</label>
             <div class="col-lg-10">
-                <input type="file" name="invoice" accept="image/*,.pdf" />
+                <input type="file" name="invoice" accept="image/*,.pdf" multiple />
             </div>
         </div>
 
         <div class="form-group">
             <label for="notice" class="col-lg-2">Notice</label>
             <div class="col-lg-10">
-                <input type="file" name="notice" accept="image/*,.pdf" />
+                <input type="file" name="notice" accept="image/*,.pdf" multiple />
             </div>
         </div>
 
         <div class="form-group">
-            <label for="expense[created_at]" class="col-lg-2">Date</label>
+            <label for="created_at" class="col-lg-2">Date</label>
             <div class="col-lg-10">
                 <input
                     type="date"
-                    value="{{ expense.created_at|date('Y-m-d') }}"
-                    name="expense[created_at]"
+                    value="{{ created_at|default(value=now())|date(format="%Y-%m-%d") }}"
+                    name="created_at"
                     required="required"
                     class="form-control"
                 />

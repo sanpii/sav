@@ -1,4 +1,4 @@
-{% extends "base.html.twig" %}
+{% extends "base" %}
 
 {% block content %}
     <a href="/expenses/add" title="Nouvelle dépense" class="btn btn-primary">
@@ -16,22 +16,22 @@
             </tr>
         </thead>
         <tbody>
-            {% for expense in pager.iterator %}
-                <tr class="list-group-item-{{ expense.warranty_active ?  'success' : 'danger' }} {{ expense.trashed ? 'trashed' : '' }}">
+            {% for expense in iterator %}
+                <tr class="list-group-item-{% if expense.warranty_active %}success{% else %}danger{% endif %} }} {% if expense.trashed %}trashed{% endif %} }}">
                     <td><a href="#detail-{{ expense.id }}">{{ expense.name }}</a></td>
-                    <td>{{ expense.created_at | date('d/m/Y') }}</td>
+                    <td>{{ expense.created_at | date(format="%d/%m/%Y") }}</td>
                     <td>{{ expense.shop }}</td>
-                    <td>{{ expense.price | number_format(2) }} €</td>
-                    <td><span class="glyphicon glyphicon-{{ expense.hasNotice() ? 'check' : 'unchecked' }}"></span></td>
+                    <td>{{ expense.price | round(precision=2) }} €</td>
+                    <td><span class="glyphicon glyphicon-{% if expense.hasNotice %}check{% else %}unchecked{% endif %} }}"></span></td>
                     <td id="detail-{{ expense.id }}" class="overlay">
                         <div class="content">
                             <a href="#" class="close"><span aria-hidden="true">&times;</span></a>
-                            {{ include('expense/view.html.twig', { 'expense': expense }) }}
+                            {% include "expense/view" %}
                         </div>
                     </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
-    {{ include('pager.html.twig', { 'pager': pager }) }}
+    {% include "pager" %}
 {% endblock %}
