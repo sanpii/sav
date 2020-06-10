@@ -1,6 +1,6 @@
 {
     "name": "sanpi/sav",
     "dependencies": {
-        "bootstrap": "~4.0"
+        "bootstrap": "^4.0"
     }
 }
