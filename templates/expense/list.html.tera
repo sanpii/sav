@@ -16,7 +16,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for expense in iterator %}
+            {% for expense in pager.iterator %}
                 <tr id="item-{{ expense.id }}" class="list-group-item-{% if expense.warranty_active %}success{% else %}danger{% endif %} }} {% if expense.trashed %}trashed{% endif %} }}">
                     <td><a href="#detail-{{ expense.id }}">{{ expense.name }}</a></td>
                     <td>{{ expense.created_at | date(format="%d/%m/%Y") }}</td>

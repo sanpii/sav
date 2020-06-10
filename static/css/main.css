@@ -1,3 +1,7 @@
+.alert p {
+    margin-bottom: 0;
+}
+
 .trashed {
     text-decoration: line-through;
 }

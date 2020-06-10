@@ -7,6 +7,8 @@ use database::Database;
 use rocket_contrib::templates::Template;
 use std::collections::HashMap;
 
+type Flash = rocket::response::Flash<rocket::response::Redirect>;
+
 macro_rules! read {
     ($entry:ident -> String) => {{
         use std::io::Read;
@@ -61,9 +63,9 @@ struct FormData {
     pub shop: String,
     pub warranty: i32,
     pub price: f32,
-    pub photo: Vec<u8>,
-    pub invoice: Vec<u8>,
-    pub notice: Vec<u8>,
+    pub photo: Option<Vec<u8>>,
+    pub invoice: Option<Vec<u8>>,
+    pub notice: Option<Vec<u8>>,
 }
 
 impl FormData {
@@ -85,9 +87,9 @@ impl Default for FormData {
             shop: String::new(),
             warranty: 0,
             price: 0.,
-            photo: Vec::new(),
-            invoice: Vec::new(),
-            notice: Vec::new(),
+            photo: None,
+            invoice: None,
+            notice: None,
         }
     }
 }
@@ -133,9 +135,9 @@ impl<'a> rocket::data::FromData<'a> for FormData {
             field!(form_data.shop = entry as String);
             field!(form_data.warranty = entry as i32);
             field!(form_data.price = entry as f32);
-            field!(form_data.photo = entry as Vec);
-            field!(form_data.invoice = entry as Vec);
-            field!(form_data.notice = entry as Vec);
+            field!(form_data.photo = entry as Option<Vec>);
+            field!(form_data.invoice = entry as Option<Vec>);
+            field!(form_data.notice = entry as Option<Vec>);
         })
         .expect("Unable to iterate");
 
@@ -219,25 +221,29 @@ struct Params {
 }
 
 #[rocket::get("/?<params..>")]
-fn index(database: rocket::State<Database>, params: rocket::request::Form<Params>) -> Template {
+fn index(database: rocket::State<Database>, params: rocket::request::Form<Params>, flash: Option<rocket::request::FlashMessage>) -> Template {
     let page = params.page.unwrap_or(1);
     let trashed = params.trashed.unwrap_or(false);
     let limit = params.limit.unwrap_or(50);
 
     let pager = database.all(page, limit, trashed);
 
-    Template::render("expense/list", &pager)
+    let mut context = tera::Context::new();
+    context.insert("pager", &pager);
+    context.insert("flash", &flash.map(|x| (x.name().to_string(), x.msg().to_string())));
+
+    Template::render("expense/list", &context)
 }
 
 #[rocket::get("/expenses/add")]
 fn add() -> Template {
-    let context = HashMap::<&str, &str>::new();
+    let context = tera::Context::new();
 
     Template::render("expense/edit", &context)
 }
 
 #[rocket::post("/expenses/add", data = "<form_data>")]
-fn create(database: rocket::State<Database>, form_data: FormData) -> rocket::response::Redirect {
+fn create(database: rocket::State<Database>, form_data: FormData) -> Flash {
     save(database, -1, form_data)
 }
 
@@ -253,7 +259,7 @@ fn save(
     database: rocket::State<Database>,
     id: i32,
     form_data: FormData,
-) -> rocket::response::Redirect {
+) -> Flash {
     let entity = form_data.clone().into();
 
     let (entity, msg) = if id > 0 {
@@ -262,13 +268,17 @@ fn save(
         (database.create(&entity), "Achat créé")
     };
 
-    write_file("photo", &form_data.photo, &entity);
-    write_file("invoice", &form_data.invoice, &entity);
-    write_file("notice", &form_data.notice, &entity);
+    if let Some(photo) = &form_data.photo {
+        write_file("photo", photo, &entity);
+    }
+    if let Some(invoice) = &form_data.invoice {
+        write_file("invoice", invoice, &entity);
+    }
+    if let Some(notice) = &form_data.notice {
+        write_file("notice", notice, &entity);
+    }
 
-    log::info!("{}", msg);
-
-    rocket::response::Redirect::to("/")
+    Flash::success(rocket::response::Redirect::to("/"), msg)
 }
 
 fn write_file(file_type: &str, content: &[u8], expense: &crate::expense::Entity) {
@@ -291,31 +301,25 @@ fn write_file(file_type: &str, content: &[u8], expense: &crate::expense::Entity)
 }
 
 #[rocket::get("/expenses/<id>/delete")]
-fn delete(database: rocket::State<Database>, id: i32) -> rocket::response::Redirect {
+fn delete(database: rocket::State<Database>, id: i32) -> Flash {
     database.delete(id);
     std::fs::remove_dir_all(media_path(id, "photo").parent().unwrap()).unwrap();
 
-    log::info!("Achat supprimé");
-
-    rocket::response::Redirect::to("/")
+    Flash::success(rocket::response::Redirect::to("/"), "Achat supprimé")
 }
 
 #[rocket::get("/expenses/<id>/trash")]
-fn trash(database: rocket::State<Database>, id: i32) -> rocket::response::Redirect {
+fn trash(database: rocket::State<Database>, id: i32) -> Flash {
     database.trash(id);
 
-    log::info!("Achat jeté");
-
-    rocket::response::Redirect::to("/")
+    Flash::success(rocket::response::Redirect::to("/"), "Achat jeté")
 }
 
 #[rocket::get("/expenses/<id>/untrash")]
-fn untrash(database: rocket::State<Database>, id: i32) -> rocket::response::Redirect {
+fn untrash(database: rocket::State<Database>, id: i32) -> Flash {
     database.untrash(id);
 
-    log::info!("Achat recyclé");
-
-    rocket::response::Redirect::to("/")
+    Flash::success(rocket::response::Redirect::to("/"), "Achat recyclé")
 }
 
 #[rocket::get("/expenses/<id>/photo")]

@@ -16,15 +16,11 @@
                 </div>
             </div>
 
-            {#
-            {% for type, messages in flash %}
-                <div class="alert alert-{{ type }}">
-                    {% for message in messages %}
-                        <p>{{ message }}</p>
-                    {% endfor %}
+            {% if flash %}
+                <div class="alert alert-{{ flash.0 }}">
+                    <p>{{ flash.1 }}</p>
                 </div>
-            {% endfor %}
-            #}
+            {% endif %}
 
             {% block content %}{% endblock %}
         </div>
