@@ -17,7 +17,7 @@
         </thead>
         <tbody>
             {% for expense in iterator %}
-                <tr class="list-group-item-{% if expense.warranty_active %}success{% else %}danger{% endif %} }} {% if expense.trashed %}trashed{% endif %} }}">
+                <tr id="item-{{ expense.id }}" class="list-group-item-{% if expense.warranty_active %}success{% else %}danger{% endif %} }} {% if expense.trashed %}trashed{% endif %} }}">
                     <td><a href="#detail-{{ expense.id }}">{{ expense.name }}</a></td>
                     <td>{{ expense.created_at | date(format="%d/%m/%Y") }}</td>
                     <td>{{ expense.shop }}</td>
@@ -25,7 +25,7 @@
                     <td><span class="glyphicon glyphicon-{% if expense.hasNotice %}check{% else %}unchecked{% endif %} }}"></span></td>
                     <td id="detail-{{ expense.id }}" class="overlay">
                         <div class="content">
-                            <a href="#" class="close"><span aria-hidden="true">&times;</span></a>
+                            <a href="#item-{{ expense.id }}" class="close"><span aria-hidden="true">&times;</span></a>
                             {% include "expense/view" %}
                         </div>
                     </td>

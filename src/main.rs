@@ -68,7 +68,9 @@ struct FormData {
 
 impl FormData {
     fn parse_date(date: &str) -> chrono::NaiveDateTime {
-        chrono::NaiveDate::parse_from_str(date, "%F").unwrap().and_hms(0, 0, 0)
+        chrono::NaiveDate::parse_from_str(date, "%F")
+            .unwrap()
+            .and_hms(0, 0, 0)
     }
 }
 
@@ -95,16 +97,20 @@ impl<'a> rocket::data::FromData<'a> for FormData {
     type Borrowed = [u8];
     type Error = ();
 
-    fn transform(_request: &rocket::Request, data: rocket::Data) -> rocket::data::Transform<rocket::data::Outcome<Self::Owned, Self::Error>>
-    {
+    fn transform(
+        _request: &rocket::Request,
+        data: rocket::Data,
+    ) -> rocket::data::Transform<rocket::data::Outcome<Self::Owned, Self::Error>> {
         let mut d = Vec::new();
         data.stream_to(&mut d).expect("Unable to read");
 
         rocket::data::Transform::Owned(rocket::data::Outcome::Success(d))
     }
 
-    fn from_data(request: &rocket::Request, outcome: rocket::data::Transformed<'a, Self>) -> rocket::data::Outcome<Self, Self::Error>
-    {
+    fn from_data(
+        request: &rocket::Request,
+        outcome: rocket::data::Transformed<'a, Self>,
+    ) -> rocket::data::Outcome<Self, Self::Error> {
         let d = outcome.owned()?;
 
         let ct = request
@@ -156,18 +162,14 @@ impl Into<expense::Entity> for FormData {
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     pretty_env_logger::init();
 
     #[cfg(debug_assertions)]
-    dotenv::dotenv()
-        .ok();
+    dotenv::dotenv().ok();
 
-    let ip = std::env::var("LISTEN_IP")
-        .expect("Missing LISTEN_IP env variable");
-    let port = std::env::var("LISTEN_PORT")
-        .expect("Missing LISTEN_IP env variable");
+    let ip = std::env::var("LISTEN_IP").expect("Missing LISTEN_IP env variable");
+    let port = std::env::var("LISTEN_PORT").expect("Missing LISTEN_IP env variable");
 
     let env = if cfg!(debug_assertions) {
         rocket::config::Environment::Development
@@ -186,23 +188,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
 
     rocket::custom(config)
         .attach(Template::custom(|engines| {
-            engines.tera.register_function("has_media", Box::new(has_media));
+            engines
+                .tera
+                .register_function("has_media", Box::new(has_media));
         }))
         .manage(Database::new())
-        .mount("/static", rocket_contrib::serve::StaticFiles::from(concat!(env!("CARGO_MANIFEST_DIR"), "/static")))
-        .mount("/", rocket::routes![
-        index,
-        add,
-        create,
-        edit,
-        save,
-        delete,
-        trash,
-        untrash,
-        photo,
-        invoice,
-        notice,
-    ]).launch();
+        .mount(
+            "/static",
+            rocket_contrib::serve::StaticFiles::from(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/static"
+            )),
+        )
+        .mount(
+            "/",
+            rocket::routes![
+                index, add, create, edit, save, delete, trash, untrash, photo, invoice, notice,
+            ],
+        )
+        .launch();
 
     Ok(())
 }
@@ -215,8 +219,7 @@ struct Params {
 }
 
 #[rocket::get("/?<params..>")]
-fn index(database: rocket::State<Database>, params: rocket::request::Form<Params>) -> Template
-{
+fn index(database: rocket::State<Database>, params: rocket::request::Form<Params>) -> Template {
     let page = params.page.unwrap_or(1);
     let trashed = params.trashed.unwrap_or(false);
     let limit = params.limit.unwrap_or(50);
@@ -227,29 +230,30 @@ fn index(database: rocket::State<Database>, params: rocket::request::Form<Params
 }
 
 #[rocket::get("/expenses/add")]
-fn add() -> Template
-{
+fn add() -> Template {
     let context = HashMap::<&str, &str>::new();
 
     Template::render("expense/edit", &context)
 }
 
-#[rocket::post("/expenses/add", data="<form_data>")]
-fn create(database: rocket::State<Database>, form_data: FormData) -> rocket::response::Redirect
-{
+#[rocket::post("/expenses/add", data = "<form_data>")]
+fn create(database: rocket::State<Database>, form_data: FormData) -> rocket::response::Redirect {
     save(database, -1, form_data)
 }
 
 #[rocket::get("/expenses/<id>/edit")]
-fn edit(database: rocket::State<Database>, id: i32) -> Option<Template>
-{
-    database.get(id)
+fn edit(database: rocket::State<Database>, id: i32) -> Option<Template> {
+    database
+        .get(id)
         .map(|expense| Template::render("expense/edit", &expense))
 }
 
-#[rocket::post("/expenses/<id>/edit", data="<form_data>")]
-fn save(database: rocket::State<Database>, id: i32, form_data: FormData) -> rocket::response::Redirect
-{
+#[rocket::post("/expenses/<id>/edit", data = "<form_data>")]
+fn save(
+    database: rocket::State<Database>,
+    id: i32,
+    form_data: FormData,
+) -> rocket::response::Redirect {
     let entity = form_data.clone().into();
 
     let (entity, msg) = if id > 0 {
@@ -267,8 +271,7 @@ fn save(database: rocket::State<Database>, id: i32, form_data: FormData) -> rock
     rocket::response::Redirect::to("/")
 }
 
-fn write_file(file_type: &str, content: &[u8], expense: &crate::expense::Entity)
-{
+fn write_file(file_type: &str, content: &[u8], expense: &crate::expense::Entity) {
     use std::io::Write;
 
     if content.is_empty() {
@@ -288,8 +291,7 @@ fn write_file(file_type: &str, content: &[u8], expense: &crate::expense::Entity)
 }
 
 #[rocket::get("/expenses/<id>/delete")]
-fn delete(database: rocket::State<Database>, id: i32) -> rocket::response::Redirect
-{
+fn delete(database: rocket::State<Database>, id: i32) -> rocket::response::Redirect {
     database.delete(id);
     std::fs::remove_dir_all(media_path(id, "photo").parent().unwrap()).unwrap();
 
@@ -299,8 +301,7 @@ fn delete(database: rocket::State<Database>, id: i32) -> rocket::response::Redir
 }
 
 #[rocket::get("/expenses/<id>/trash")]
-fn trash(database: rocket::State<Database>, id: i32) -> rocket::response::Redirect
-{
+fn trash(database: rocket::State<Database>, id: i32) -> rocket::response::Redirect {
     database.trash(id);
 
     log::info!("Achat jeté");
@@ -309,8 +310,7 @@ fn trash(database: rocket::State<Database>, id: i32) -> rocket::response::Redire
 }
 
 #[rocket::get("/expenses/<id>/untrash")]
-fn untrash(database: rocket::State<Database>, id: i32) -> rocket::response::Redirect
-{
+fn untrash(database: rocket::State<Database>, id: i32) -> rocket::response::Redirect {
     database.untrash(id);
 
     log::info!("Achat recyclé");
@@ -319,42 +319,35 @@ fn untrash(database: rocket::State<Database>, id: i32) -> rocket::response::Redi
 }
 
 #[rocket::get("/expenses/<id>/photo")]
-fn photo(id: i32) -> Option<rocket::response::NamedFile>
-{
+fn photo(id: i32) -> Option<rocket::response::NamedFile> {
     media(id, "photo")
 }
 
 #[rocket::get("/expenses/<id>/invoice")]
-fn invoice(id: i32) -> Option<rocket::response::NamedFile>
-{
+fn invoice(id: i32) -> Option<rocket::response::NamedFile> {
     media(id, "invoice")
 }
 
 #[rocket::get("/expenses/<id>/notice")]
-fn notice(id: i32) -> Option<rocket::response::NamedFile>
-{
+fn notice(id: i32) -> Option<rocket::response::NamedFile> {
     media(id, "notice")
 }
 
-fn media(id: i32, file_type: &str) -> Option<rocket::response::NamedFile>
-{
+fn media(id: i32, file_type: &str) -> Option<rocket::response::NamedFile> {
     let path = media_path(id, file_type);
 
-    rocket::response::NamedFile::open(&path)
-        .ok()
+    rocket::response::NamedFile::open(&path).ok()
 }
 
 fn media_path(id: i32, file_type: &str) -> std::path::PathBuf {
-    let data_dir = std::env::var("DATA_DIR")
-        .expect("Missing DATA_DIR env variable");
+    let data_dir = std::env::var("DATA_DIR").expect("Missing DATA_DIR env variable");
 
     let filename = format!("{}/{}/{}", data_dir, id, file_type);
 
     std::path::PathBuf::from(&filename)
 }
 
-fn has_media(args: HashMap<String, tera::Value>) -> tera::Result<tera::Value>
-{
+fn has_media(args: HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
     let id = match args.get("id") {
         Some(val) => tera::from_value::<i32>(val.clone())?,
         None => return Err("oops".into()),

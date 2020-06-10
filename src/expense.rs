@@ -25,8 +25,14 @@ impl<'a> elephantry::Model<'a> for Model {
 
     fn create_projection() -> elephantry::Projection {
         Self::default_projection()
-            .add_field("warranty_at", "%:created_at:% + (%:warranty:% || ' years')::interval")
-            .add_field("warranty_active", "%:created_at:% + (%:warranty:% || ' years')::interval > now()")
+            .add_field(
+                "warranty_at",
+                "%:created_at:% + (%:warranty:% || ' years')::interval",
+            )
+            .add_field(
+                "warranty_active",
+                "%:created_at:% + (%:warranty:% || ' years')::interval > now()",
+            )
             .add_field("trashed", "%:trashed_at:% is not null")
             .unset_field("trashed_at")
     }
@@ -34,20 +40,16 @@ impl<'a> elephantry::Model<'a> for Model {
 
 pub struct Structure;
 
-impl elephantry::Structure for Structure
-{
-    fn relation() -> &'static str
-    {
+impl elephantry::Structure for Structure {
+    fn relation() -> &'static str {
         "public.expense"
     }
 
-    fn primary_key() -> &'static [&'static str]
-    {
+    fn primary_key() -> &'static [&'static str] {
         &["id"]
     }
 
-    fn definition() -> &'static [&'static str]
-    {
+    fn definition() -> &'static [&'static str] {
         &[
             "id",
             "created_at",
