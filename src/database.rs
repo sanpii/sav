@@ -3,13 +3,13 @@ pub struct Database {
 }
 
 impl Database {
-    pub fn new() -> Self {
+    pub fn new() -> elephantry::Result<Self> {
         let database_url =
             std::env::var("DATABASE_URL").expect("Missing DATABASE_URL env variable");
 
-        let elephantry = elephantry::Pool::new(&database_url).unwrap();
+        let elephantry = elephantry::Pool::new(&database_url)?;
 
-        Self { elephantry }
+        Ok(Self { elephantry })
     }
 
     pub fn all(
@@ -17,7 +17,7 @@ impl Database {
         page: usize,
         limit: usize,
         trashed: bool,
-    ) -> elephantry::Pager<crate::expense::Entity> {
+    ) -> elephantry::Result<elephantry::Pager<crate::expense::Entity>> {
         let clause = if trashed {
             "trashed_at is not null"
         } else {
@@ -32,42 +32,37 @@ impl Database {
                 page,
                 Some("order by created_at desc"),
             )
-            .unwrap()
     }
 
-    pub fn get(&self, id: i32) -> Option<crate::expense::Entity> {
+    pub fn get(&self, id: i32) -> elephantry::Result<Option<crate::expense::Entity>> {
         self.elephantry
             .find_by_pk::<crate::expense::Model>(&elephantry::pk!(id))
-            .unwrap()
     }
 
-    pub fn create(&self, entity: &crate::expense::Entity) -> crate::expense::Entity {
+    pub fn create(&self, entity: &crate::expense::Entity) -> elephantry::Result<crate::expense::Entity> {
         self.elephantry
             .insert_one::<crate::expense::Model>(entity)
-            .unwrap()
     }
 
-    pub fn update(&self, id: i32, entity: &crate::expense::Entity) -> crate::expense::Entity {
+    pub fn update(&self, id: i32, entity: &crate::expense::Entity) -> elephantry::Result<crate::expense::Entity> {
         self.elephantry
             .update_one::<crate::expense::Model>(&elephantry::pk!(id), entity)
-            .unwrap()
     }
 
-    pub fn delete(&self, id: i32) -> crate::expense::Entity {
+    pub fn delete(&self, id: i32) -> elephantry::Result<crate::expense::Entity> {
         self.elephantry
             .delete_by_pk::<crate::expense::Model>(&elephantry::pk!(id))
-            .unwrap()
     }
 
-    pub fn trash(&self, id: i32) {
+    pub fn trash(&self, id: i32) -> elephantry::Result<crate::expense::Entity> {
         self.set_trash(id, true)
     }
 
-    pub fn untrash(&self, id: i32) {
+    pub fn untrash(&self, id: i32) -> elephantry::Result<crate::expense::Entity> {
         self.set_trash(id, false)
     }
 
-    fn set_trash(&self, id: i32, trash: bool) {
+    fn set_trash(&self, id: i32, trash: bool) -> elephantry::Result<crate::expense::Entity> {
         let trashed_at = if trash {
             Some(chrono::offset::Local::now().date().naive_local())
         } else {
@@ -82,6 +77,5 @@ impl Database {
 
         self.elephantry
             .update_by_pk::<crate::expense::Model>(&elephantry::pk!(id), &data)
-            .unwrap();
     }
 }

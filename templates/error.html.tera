@@ -1,0 +1,17 @@
+{% extends "base" %}
+
+{% block title %}Internal error{% endblock %}
+
+{% block content %}
+<div class="alert alert-danger">
+    Internal server error, please report this bug
+    <a href="https://gitlab.com/sanpi/sav/issues">here</a>.
+
+</div>
+
+{% if message %}
+    <div class="alert alert-danger">
+        {{ message }}
+    </div>
+{% endif %}
+{% endblock %}
