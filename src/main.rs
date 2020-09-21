@@ -268,7 +268,7 @@ fn save(
     let entity = form_data.clone().into();
 
     let (entity, msg) = if id > 0 {
-        (database.update(id, &entity)?, "Achat mis à jour")
+        (database.update(id, &entity)?.unwrap(), "Achat mis à jour")
     } else {
         (database.create(&entity)?, "Achat créé")
     };

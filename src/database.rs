@@ -44,25 +44,25 @@ impl Database {
             .insert_one::<crate::expense::Model>(entity)
     }
 
-    pub fn update(&self, id: i32, entity: &crate::expense::Entity) -> elephantry::Result<crate::expense::Entity> {
+    pub fn update(&self, id: i32, entity: &crate::expense::Entity) -> elephantry::Result<Option<crate::expense::Entity>> {
         self.elephantry
             .update_one::<crate::expense::Model>(&elephantry::pk!(id), entity)
     }
 
-    pub fn delete(&self, id: i32) -> elephantry::Result<crate::expense::Entity> {
+    pub fn delete(&self, id: i32) -> elephantry::Result<Option<crate::expense::Entity>> {
         self.elephantry
             .delete_by_pk::<crate::expense::Model>(&elephantry::pk!(id))
     }
 
-    pub fn trash(&self, id: i32) -> elephantry::Result<crate::expense::Entity> {
+    pub fn trash(&self, id: i32) -> elephantry::Result<Option<crate::expense::Entity>> {
         self.set_trash(id, true)
     }
 
-    pub fn untrash(&self, id: i32) -> elephantry::Result<crate::expense::Entity> {
+    pub fn untrash(&self, id: i32) -> elephantry::Result<Option<crate::expense::Entity>> {
         self.set_trash(id, false)
     }
 
-    fn set_trash(&self, id: i32, trash: bool) -> elephantry::Result<crate::expense::Entity> {
+    fn set_trash(&self, id: i32, trash: bool) -> elephantry::Result<Option<crate::expense::Entity>> {
         let trashed_at = if trash {
             Some(chrono::offset::Local::now().date().naive_local())
         } else {
