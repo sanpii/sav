@@ -25,5 +25,5 @@ default-features = false
 features = ["serve", "tera_templates"]
 
 [dependencies.elephantry]
-version = "0.6"
+version = "0.8"
 features = ["date", "serde-support"]
