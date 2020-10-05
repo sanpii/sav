@@ -1,10 +1,10 @@
-BOWER_FLAGS=
+YARN_FLAGS=
 CARGO=cargo
 CARGO_FLAGS=
 
 ifeq ($(APP_ENVIRONMENT),prod)
 	TARGET=target/release/sav
-	BOWER_FLAGS+=--production
+	YARN_FLAGS+=--production
 	CARGO_FLAGS+=--release
 else
 	TARGET=target/debug/sav
@@ -18,5 +18,5 @@ build: $(TARGET) static/lib
 $(TARGET):
 	$(CARGO) build $(CARGO_FLAGS)
 
-static/lib: bower.json
-	bower install $(BOWER_FLAGS)
+static/lib: package.json
+	yarn install $(YARN_FLAGS)

@@ -2,4 +2,5 @@
 /Cargo.lock
 /static/lib
 /target
+/yarn.lock
 **/*.rs.bk
