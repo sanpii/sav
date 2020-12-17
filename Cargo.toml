@@ -12,7 +12,8 @@ rocket = "0.4"
 multipart = "0.17"
 serde = "1.0"
 serde_derive = "1.0"
-tera = "0.11"
+tera = "1.5"
+tera-hot = "0.2"
 tree_magic = "0.2"
 
 [dependencies.chrono]
@@ -22,8 +23,12 @@ features = ["serde"]
 [dependencies.rocket_contrib]
 version = "0.4"
 default-features = false
-features = ["serve", "tera_templates"]
+features = ["serve"]
 
 [dependencies.elephantry]
 version = "1.0"
 features = ["date", "serde-support"]
+
+[dependencies.elephantry-extras]
+version = "0.1"
+features = ["serde", "tera"]

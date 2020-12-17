@@ -6,11 +6,13 @@ mod expense;
 
 use database::Database;
 use error::Error;
-use rocket_contrib::templates::Template;
 use std::collections::HashMap;
 
 type Flash = rocket::response::Flash<rocket::response::Redirect>;
 type Result<T> = std::result::Result<T, crate::Error>;
+type Response = rocket::response::content::Html<String>;
+
+static TEMPLATE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/templates");
 
 macro_rules! read {
     ($entry:ident -> String) => {{
@@ -167,14 +169,34 @@ impl Into<expense::Entity> for FormData {
     }
 }
 
-fn main() -> Result<()> {
-    pretty_env_logger::init();
+struct AppData {
+    pub database: Database,
+    pub template: tera_hot::Template,
+}
 
+impl AppData {
+    fn new() -> Result<Self> {
+        let mut template = tera_hot::Template::new(TEMPLATE_DIR);
+        template.register_function("has_media", Box::new(has_media));
+        template.register_function("pager", elephantry_extras::tera::Pager);
+
+        let app_data = Self {
+            database: Database::new()?,
+            template,
+        };
+
+        Ok(app_data)
+    }
+}
+
+fn main() -> Result<()> {
     #[cfg(debug_assertions)]
     dotenv::dotenv().ok();
 
+    pretty_env_logger::init();
+
     let ip = std::env::var("LISTEN_IP").expect("Missing LISTEN_IP env variable");
-    let port = std::env::var("LISTEN_PORT").expect("Missing LISTEN_IP env variable");
+    let port = std::env::var("LISTEN_PORT").expect("Missing LISTEN_PORT env variable");
 
     let env = if cfg!(debug_assertions) {
         rocket::config::Environment::Development
@@ -192,12 +214,7 @@ fn main() -> Result<()> {
     }
 
     rocket::custom(config)
-        .attach(Template::custom(|engines| {
-            engines
-                .tera
-                .register_function("has_media", Box::new(has_media));
-        }))
-        .manage(Database::new()?)
+        .manage(AppData::new()?)
         .mount(
             "/static",
             rocket_contrib::serve::StaticFiles::from(concat!(
@@ -224,53 +241,60 @@ struct Params {
 }
 
 #[rocket::get("/?<params..>")]
-fn index(database: rocket::State<Database>, params: rocket::request::Form<Params>, flash: Option<rocket::request::FlashMessage>) -> Result<Template> {
+fn index(data: rocket::State<AppData>, params: rocket::request::Form<Params>, flash: Option<rocket::request::FlashMessage>) -> Result<Response> {
     let page = params.page.unwrap_or(1);
     let trashed = params.trashed.unwrap_or(false);
     let limit = params.limit.unwrap_or(50);
 
-    let pager = database.all(page, limit, trashed)?;
+    let pager = data.database.all(page, limit, trashed)?;
 
     let mut context = tera::Context::new();
     context.insert("pager", &pager);
     context.insert("flash", &flash.map(|x| (x.name().to_string(), x.msg().to_string())));
 
-    Ok(Template::render("expense/list", &context))
+    let template = data.template.render("expense/list.html", &context)?;
+
+    Ok(rocket::response::content::Html(template))
 }
 
 #[rocket::get("/expenses/add")]
-fn add() -> Template {
+fn add(data: rocket::State<AppData>) -> Result<Response> {
     let context = tera::Context::new();
+    let template = data.template.render("expense/edit.html", &context)?;
 
-    Template::render("expense/edit", &context)
+    Ok(rocket::response::content::Html(template))
 }
 
 #[rocket::post("/expenses/add", data = "<form_data>")]
-fn create(database: rocket::State<Database>, form_data: FormData) -> Result<Flash> {
-    save(database, -1, form_data)
+fn create(data: rocket::State<AppData>, form_data: FormData) -> Result<Flash> {
+    save(data, -1, form_data)
 }
 
 #[rocket::get("/expenses/<id>/edit")]
-fn edit(database: rocket::State<Database>, id: i32) -> Result<Option<Template>> {
-    Ok(
-        database
-            .get(id)?
-            .map(|expense| Template::render("expense/edit", &expense))
-    )
+fn edit(data: rocket::State<AppData>, id: i32) -> Result<Option<Response>> {
+    let expense = match data.database.get(id)? {
+        Some(expense) => expense,
+        None => return Ok(None),
+    };
+    let context = tera::Context::from_serialize(expense)?;
+    let template = data.template.render("expense/edit.html", &context)?;
+    let response = rocket::response::content::Html(template);
+
+    Ok(Some(response))
 }
 
 #[rocket::post("/expenses/<id>/edit", data = "<form_data>")]
 fn save(
-    database: rocket::State<Database>,
+    data: rocket::State<AppData>,
     id: i32,
     form_data: FormData,
 ) -> Result<Flash> {
     let entity = form_data.clone().into();
 
     let (entity, msg) = if id > 0 {
-        (database.update(id, &entity)?.unwrap(), "Achat mis à jour")
+        (data.database.update(id, &entity)?.unwrap(), "Achat mis à jour")
     } else {
-        (database.create(&entity)?, "Achat créé")
+        (data.database.create(&entity)?, "Achat créé")
     };
 
     if let Some(photo) = &form_data.photo {
@@ -308,23 +332,23 @@ fn write_file(file_type: &str, content: &[u8], expense: &crate::expense::Entity)
 }
 
 #[rocket::get("/expenses/<id>/delete")]
-fn delete(database: rocket::State<Database>, id: i32) -> Result<Flash> {
-    database.delete(id)?;
+fn delete(data: rocket::State<AppData>, id: i32) -> Result<Flash> {
+    data.database.delete(id)?;
     std::fs::remove_dir_all(media_path(id, "photo").parent().unwrap())?;
 
     Ok(Flash::success(rocket::response::Redirect::to("/"), "Achat supprimé"))
 }
 
 #[rocket::get("/expenses/<id>/trash")]
-fn trash(database: rocket::State<Database>, id: i32) -> Result<Flash> {
-    database.trash(id)?;
+fn trash(data: rocket::State<AppData>, id: i32) -> Result<Flash> {
+    data.database.trash(id)?;
 
     Ok(Flash::success(rocket::response::Redirect::to("/"), "Achat jeté"))
 }
 
 #[rocket::get("/expenses/<id>/untrash")]
-fn untrash(database: rocket::State<Database>, id: i32) -> Result<Flash> {
-    database.untrash(id)?;
+fn untrash(data: rocket::State<AppData>, id: i32) -> Result<Flash> {
+    data.database.untrash(id)?;
 
     Ok(Flash::success(rocket::response::Redirect::to("/"), "Achat recyclé"))
 }
@@ -358,7 +382,7 @@ fn media_path(id: i32, file_type: &str) -> std::path::PathBuf {
     std::path::PathBuf::from(&filename)
 }
 
-fn has_media(args: HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
+fn has_media(args: &HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
     let id = match args.get("id") {
         Some(val) => tera::from_value::<i32>(val.clone())?,
         None => return Err("oops".into()),

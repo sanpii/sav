@@ -4,6 +4,7 @@ pub enum Error {
     Io(std::io::Error),
     Parse(std::num::ParseIntError),
     Sql(elephantry::Error),
+    Template(tera::Error),
 }
 
 impl std::error::Error for Error {
@@ -17,6 +18,7 @@ impl std::fmt::Display for Error {
             Self::Io(error) => format!("I/O error: {}", error),
             Self::Parse(error) => format!("Parse error: {}", error),
             Self::Sql(error) => format!("Sql error: {}", error),
+            Self::Template(error) => format!("Template error: {}", error),
         };
 
         write!(f, "{}", s)
@@ -31,9 +33,11 @@ impl<'a> rocket::response::Responder<'a> for Error {
             context.insert("message", &self.to_string());
         }
 
-        let template = crate::Template::render("error", &context);
+        let tera = tera_hot::Template::new(crate::TEMPLATE_DIR);
+        let template = tera.render("error.html", &context);
+        let response = rocket::response::content::Html(template);
 
-        template.respond_to(request)
+        response.respond_to(request)
     }
 }
 
@@ -58,5 +62,11 @@ impl From<std::num::ParseIntError> for Error {
 impl From<rocket::config::ConfigError> for Error {
     fn from(error: rocket::config::ConfigError) -> Self {
         Self::Config(error)
+    }
+}
+
+impl From<tera::Error> for Error {
+    fn from(error: tera::Error) -> Self {
+        Self::Template(error)
     }
 }

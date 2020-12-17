@@ -14,7 +14,7 @@
         </div>
     </div>
 
-    {% if expense.serial | length != 0 %}
+    {% if expense.serial %}
         {{ macros::form_control(label="N° série", value=expense.serial) }}
     {% endif %}
 

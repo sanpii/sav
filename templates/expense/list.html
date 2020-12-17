@@ -1,4 +1,4 @@
-{% extends "base" %}
+{% extends "base.html" %}
 
 {% block content %}
     <a href="/expenses/add" title="Nouvelle dépense" class="btn btn-primary">
@@ -26,12 +26,14 @@
                     <td id="detail-{{ expense.id }}" class="overlay">
                         <div class="content">
                             <a href="#item-{{ expense.id }}" class="close"><span aria-hidden="true">&times;</span></a>
-                            {% include "expense/view" %}
+                            {% include "expense/view.html" %}
                         </div>
                     </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
-    {% include "pager" %}
+    <div class="d-flex justify-content-center mx-auto">
+        {{ pager(pager=pager) }}
+    </div>
 {% endblock %}
