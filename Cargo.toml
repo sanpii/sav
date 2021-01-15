@@ -13,7 +13,7 @@ multipart = "0.17"
 serde = "1.0"
 serde_derive = "1.0"
 tera = "1.5"
-tera-hot = "0.2"
+tera-hot = "0.3"
 tree_magic = "0.2"
 
 [dependencies.chrono]
