@@ -24,11 +24,11 @@
         {{ macros::form_control(label="Garantie", value=" <strong>terminée</strong>") }}
     {% endif %}
 
-    {% if has_media(id=expense.id, file_type="invoice") == true %}
+    {% if has_media(data_dir=data_dir, id=expense.id, file_type="invoice") == true %}
         {{ macros::form_control(label="", value='<a href="/expenses/' ~ expense.id ~ '/invoice">Facture</a>') }}
     {% endif %}
 
-    {% if has_media(id=expense.id, file_type="notice") == true %}
+    {% if has_media(data_dir=data_dir, id=expense.id, file_type="notice") == true %}
         {{ macros::form_control(label="", value='<a href="/expenses/' ~ expense.id ~ '/notice">Notice</a>') }}
     {% endif %}
 

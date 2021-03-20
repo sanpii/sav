@@ -170,7 +170,6 @@ impl Into<expense::Entity> for FormData {
 }
 
 struct AppData {
-    pub database: Database,
     pub template: tera_hot::Template,
 }
 
@@ -180,40 +179,27 @@ impl AppData {
         template.register_function("has_media", Box::new(has_media));
         template.register_function("pager", elephantry_extras::tera::Pager);
 
-        let app_data = Self {
-            database: Database::new()?,
-            template,
-        };
+        let app_data = Self { template };
 
         Ok(app_data)
     }
 }
 
 fn main() -> Result<()> {
-    #[cfg(debug_assertions)]
-    dotenv::dotenv().ok();
+    rocket::ignite()
+        .attach(Database::fairing())
+        .attach(rocket::fairing::AdHoc::on_attach(
+            "data_dir config",
+            |rocket| {
+                let data_dir = rocket
+                    .config()
+                    .get_str("data_dir")
+                    .unwrap_or("data/")
+                    .to_string();
 
-    pretty_env_logger::init();
-
-    let ip = std::env::var("LISTEN_IP").expect("Missing LISTEN_IP env variable");
-    let port = std::env::var("LISTEN_PORT").expect("Missing LISTEN_PORT env variable");
-
-    let env = if cfg!(debug_assertions) {
-        rocket::config::Environment::Development
-    } else {
-        rocket::config::Environment::Production
-    };
-
-    let mut config = rocket::Config::build(env)
-        .address(ip)
-        .port(port.parse()?)
-        .finalize()?;
-
-    if let Ok(secret_key) = std::env::var("SECRET_KEY") {
-        config.set_secret_key(secret_key)?;
-    }
-
-    rocket::custom(config)
+                Ok(rocket.manage(DataDir(data_dir)))
+            },
+        ))
         .manage(AppData::new()?)
         .mount(
             "/static",
@@ -240,17 +226,29 @@ struct Params {
     trashed: Option<bool>,
 }
 
+struct DataDir(String);
+
 #[rocket::get("/?<params..>")]
-fn index(data: rocket::State<AppData>, params: rocket::request::Form<Params>, flash: Option<rocket::request::FlashMessage>) -> Result<Response> {
+fn index(
+    database: Database,
+    data_dir: rocket::State<DataDir>,
+    data: rocket::State<AppData>,
+    params: rocket::request::Form<Params>,
+    flash: Option<rocket::request::FlashMessage>,
+) -> Result<Response> {
     let page = params.page.unwrap_or(1);
     let trashed = params.trashed.unwrap_or(false);
     let limit = params.limit.unwrap_or(50);
 
-    let pager = data.database.all(page, limit, trashed)?;
+    let pager = database.all(page, limit, trashed)?;
 
     let mut context = tera::Context::new();
+    context.insert("data_dir", &data_dir.0);
     context.insert("pager", &pager);
-    context.insert("flash", &flash.map(|x| (x.name().to_string(), x.msg().to_string())));
+    context.insert(
+        "flash",
+        &flash.map(|x| (x.name().to_string(), x.msg().to_string())),
+    );
 
     let template = data.template.render("expense/list.html", &context)?;
 
@@ -266,13 +264,17 @@ fn add(data: rocket::State<AppData>) -> Result<Response> {
 }
 
 #[rocket::post("/expenses/add", data = "<form_data>")]
-fn create(data: rocket::State<AppData>, form_data: FormData) -> Result<Flash> {
-    save(data, -1, form_data)
+fn create(
+    database: Database,
+    data_dir: rocket::State<DataDir>,
+    form_data: FormData,
+) -> Result<Flash> {
+    save(database, data_dir, -1, form_data)
 }
 
 #[rocket::get("/expenses/<id>/edit")]
-fn edit(data: rocket::State<AppData>, id: i32) -> Result<Option<Response>> {
-    let expense = match data.database.get(id)? {
+fn edit(database: Database, data: rocket::State<AppData>, id: i32) -> Result<Option<Response>> {
+    let expense = match database.get(id)? {
         Some(expense) => expense,
         None => return Ok(None),
     };
@@ -285,39 +287,45 @@ fn edit(data: rocket::State<AppData>, id: i32) -> Result<Option<Response>> {
 
 #[rocket::post("/expenses/<id>/edit", data = "<form_data>")]
 fn save(
-    data: rocket::State<AppData>,
+    database: Database,
+    data_dir: rocket::State<DataDir>,
     id: i32,
     form_data: FormData,
 ) -> Result<Flash> {
     let entity = form_data.clone().into();
 
     let (entity, msg) = if id > 0 {
-        (data.database.update(id, &entity)?.unwrap(), "Achat mis à jour")
+        (database.update(id, &entity)?.unwrap(), "Achat mis à jour")
     } else {
-        (data.database.create(&entity)?, "Achat créé")
+        (database.create(&entity)?, "Achat créé")
     };
 
     if let Some(photo) = &form_data.photo {
-        write_file("photo", photo, &entity)?;
+        write_file(&data_dir.0, "photo", photo, &entity)?;
     }
     if let Some(invoice) = &form_data.invoice {
-        write_file("invoice", invoice, &entity)?;
+        write_file(&data_dir.0, "invoice", invoice, &entity)?;
     }
     if let Some(notice) = &form_data.notice {
-        write_file("notice", notice, &entity)?;
+        write_file(&data_dir.0, "notice", notice, &entity)?;
     }
 
     Ok(Flash::success(rocket::response::Redirect::to("/"), msg))
 }
 
-fn write_file(file_type: &str, content: &[u8], expense: &crate::expense::Entity) -> Result<()> {
+fn write_file(
+    data_dir: &str,
+    file_type: &str,
+    content: &[u8],
+    expense: &crate::expense::Entity,
+) -> Result<()> {
     use std::io::Write;
 
     if content.is_empty() {
         return Ok(());
     }
 
-    let path = media_path(expense.id.unwrap(), file_type);
+    let path = media_path(&data_dir, expense.id.unwrap(), file_type);
 
     let dir = path.parent().unwrap();
     if !dir.exists() {
@@ -332,57 +340,69 @@ fn write_file(file_type: &str, content: &[u8], expense: &crate::expense::Entity)
 }
 
 #[rocket::get("/expenses/<id>/delete")]
-fn delete(data: rocket::State<AppData>, id: i32) -> Result<Flash> {
-    data.database.delete(id)?;
-    std::fs::remove_dir_all(media_path(id, "photo").parent().unwrap())?;
+fn delete(database: Database, data_dir: rocket::State<DataDir>, id: i32) -> Result<Flash> {
+    database.delete(id)?;
+    std::fs::remove_dir_all(media_path(&data_dir.0, id, "photo").parent().unwrap())?;
 
-    Ok(Flash::success(rocket::response::Redirect::to("/"), "Achat supprimé"))
+    Ok(Flash::success(
+        rocket::response::Redirect::to("/"),
+        "Achat supprimé",
+    ))
 }
 
 #[rocket::get("/expenses/<id>/trash")]
-fn trash(data: rocket::State<AppData>, id: i32) -> Result<Flash> {
-    data.database.trash(id)?;
+fn trash(database: Database, id: i32) -> Result<Flash> {
+    database.trash(id)?;
 
-    Ok(Flash::success(rocket::response::Redirect::to("/"), "Achat jeté"))
+    Ok(Flash::success(
+        rocket::response::Redirect::to("/"),
+        "Achat jeté",
+    ))
 }
 
 #[rocket::get("/expenses/<id>/untrash")]
-fn untrash(data: rocket::State<AppData>, id: i32) -> Result<Flash> {
-    data.database.untrash(id)?;
+fn untrash(database: Database, id: i32) -> Result<Flash> {
+    database.untrash(id)?;
 
-    Ok(Flash::success(rocket::response::Redirect::to("/"), "Achat recyclé"))
+    Ok(Flash::success(
+        rocket::response::Redirect::to("/"),
+        "Achat recyclé",
+    ))
 }
 
 #[rocket::get("/expenses/<id>/photo")]
-fn photo(id: i32) -> Option<rocket::response::NamedFile> {
-    media(id, "photo")
+fn photo(data_dir: rocket::State<DataDir>, id: i32) -> Option<rocket::response::NamedFile> {
+    media(&data_dir.0, id, "photo")
 }
 
 #[rocket::get("/expenses/<id>/invoice")]
-fn invoice(id: i32) -> Option<rocket::response::NamedFile> {
-    media(id, "invoice")
+fn invoice(data_dir: rocket::State<DataDir>, id: i32) -> Option<rocket::response::NamedFile> {
+    media(&data_dir.0, id, "invoice")
 }
 
 #[rocket::get("/expenses/<id>/notice")]
-fn notice(id: i32) -> Option<rocket::response::NamedFile> {
-    media(id, "notice")
+fn notice(data_dir: rocket::State<DataDir>, id: i32) -> Option<rocket::response::NamedFile> {
+    media(&data_dir.0, id, "notice")
 }
 
-fn media(id: i32, file_type: &str) -> Option<rocket::response::NamedFile> {
-    let path = media_path(id, file_type);
+fn media(data_dir: &str, id: i32, file_type: &str) -> Option<rocket::response::NamedFile> {
+    let path = media_path(data_dir, id, file_type);
 
     rocket::response::NamedFile::open(&path).ok()
 }
 
-fn media_path(id: i32, file_type: &str) -> std::path::PathBuf {
-    let data_dir = std::env::var("DATA_DIR").expect("Missing DATA_DIR env variable");
-
+fn media_path(data_dir: &str, id: i32, file_type: &str) -> std::path::PathBuf {
     let filename = format!("{}/{}/{}", data_dir, id, file_type);
 
     std::path::PathBuf::from(&filename)
 }
 
 fn has_media(args: &HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
+    let data_dir = match args.get("data_dir") {
+        Some(val) => tera::from_value::<String>(val.clone())?,
+        None => return Err("oops".into()),
+    };
+
     let id = match args.get("id") {
         Some(val) => tera::from_value::<i32>(val.clone())?,
         None => return Err("oops".into()),
@@ -393,7 +413,7 @@ fn has_media(args: &HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
         None => return Err("oops".into()),
     };
 
-    let exists = media_path(id, &file_type).exists();
+    let exists = media_path(&data_dir, id, &file_type).exists();
     let value = tera::to_value(exists)?;
 
     Ok(value)
