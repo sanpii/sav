@@ -4,19 +4,26 @@ pub struct Database(elephantry::Connection);
 impl Database {
     pub fn all(
         &self,
+        q: &Option<String>,
         page: usize,
         limit: usize,
         trashed: bool,
     ) -> elephantry::Result<elephantry::Pager<crate::expense::Entity>> {
-        let clause = if trashed {
-            "trashed_at is not null"
+        let mut clause = elephantry::Where::new();
+
+        if let Some(q) = q {
+            clause.and_where("name ~* $*", vec![q]);
+        }
+
+        if trashed {
+            clause.and_where("trashed_at is not null", Vec::new());
         } else {
-            "trashed_at is null"
-        };
+            clause.and_where("trashed_at is null", Vec::new());
+        }
 
         self.0.paginate_find_where::<crate::expense::Model>(
-            clause,
-            &[],
+            &clause.to_string(),
+            &clause.params(),
             limit,
             page,
             Some("order by created_at desc"),

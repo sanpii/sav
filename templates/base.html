@@ -11,9 +11,18 @@
     <body>
         <div class="container">
             <div class="navbar navbar-default">
-                <div class="navbar-header">
-                    <a class="navbar-brand" href="/">S.A.V.</a>
-                </div>
+                <a class="navbar-brand mr-auto" href="/">S.A.V.</a>
+
+                <form class="form-inline">
+                    <input
+                        class="form-control mr-sm-2"
+                        type="search"
+                        placeholder="Search"
+                        name="q"
+                        value="{{ q|default(value="") }}"
+                    />
+                    <button class="btn btn-outline-primary" type="submit">Search</button>
+                </form>
             </div>
 
             {% if flash %}

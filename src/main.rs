@@ -224,6 +224,7 @@ struct Params {
     page: Option<usize>,
     limit: Option<usize>,
     trashed: Option<bool>,
+    q: Option<String>,
 }
 
 struct DataDir(String);
@@ -240,11 +241,19 @@ fn index(
     let trashed = params.trashed.unwrap_or(false);
     let limit = params.limit.unwrap_or(50);
 
-    let pager = database.all(page, limit, trashed)?;
+    let pager = database.all(&params.q, page, limit, trashed)?;
+
+    let base_url = if let Some(q) = &params.q {
+        format!("/?q={}", q)
+    } else {
+        String::new()
+    };
 
     let mut context = tera::Context::new();
+    context.insert("base_url", &base_url);
     context.insert("data_dir", &data_dir.0);
     context.insert("pager", &pager);
+    context.insert("q", &params.q);
     context.insert(
         "flash",
         &flash.map(|x| (x.name().to_string(), x.msg().to_string())),
