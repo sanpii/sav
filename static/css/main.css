@@ -6,20 +6,12 @@
     text-decoration: line-through;
 }
 
-.table {
-    margin-top: 1rem;
-}
-
-.table > tbody > tr > td.overlay,
-.table > tbody > tr > td.overlay:hover {
-    background: none;
-}
-
 .overlay {
     display: none;
 }
 
 .overlay:target {
+    --bs-table-accent-bg: transparent;
     z-index: 4;
     display: block;
     background-color: rgba(0, 0, 0, 0.5) ;
