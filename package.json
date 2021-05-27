@@ -1,6 +1,7 @@
 {
     "name": "sav",
     "dependencies": {
-        "bootstrap": "^5.0"
+        "bootstrap": "^5.0",
+        "bootstrap-icons": "^1.5"
     }
 }

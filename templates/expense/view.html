@@ -37,12 +37,12 @@
     </div>
 
     <div class="form-group mt-3">
-        <a href="/expenses/{{ expense.id }}/edit" class="btn btn-primary"><span class="glyphicon glyphicon-edit"></span> Modifier</a>
+        <a href="/expenses/{{ expense.id }}/edit" class="btn btn-primary"><span class="bi-pencil"></span> Modifier</a>
         {% if not expense.trashed %}
-            <a href="/expenses/{{ expense.id }}/trash" class="btn btn-warning"><span class="glyphicon glyphicon-trash"></span> Jeter</a>
+            <a href="/expenses/{{ expense.id }}/trash" class="btn btn-warning"><span class="bi-trash"></span> Jeter</a>
         {% else %}
-            <a href="/expenses/{{ expense.id }}/untrash" class="btn btn-outline-dark"><span class="glyphicon glyphicon-refresh"></span> Recycler</a>
+            <a href="/expenses/{{ expense.id }}/untrash" class="btn btn-outline-dark"><span class="bi-recycle"></span> Recycler</a>
         {% endif %}
-        <a onclick="return confirm('Êtes vous sûr ?');" href="/expenses/{{ expense.id }}/delete" class="btn btn-danger"><span class="glyphicon glyphicon-remove"></span> Supprimer</a>
+        <a onclick="return confirm('Êtes vous sûr ?');" href="/expenses/{{ expense.id }}/delete" class="btn btn-danger"><span class="bi-x-circle"></span> Supprimer</a>
     </div>
 </form>
