@@ -8,7 +8,7 @@ license = "MIT"
 [dependencies]
 mime = "0.3"
 rocket = "0.4"
-multipart = "0.17"
+multipart = "0.18"
 serde = "1.0"
 serde_derive = "1.0"
 tera = "1.5"
