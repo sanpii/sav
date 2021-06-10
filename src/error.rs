@@ -18,8 +18,7 @@ impl<'r, 'o: 'r> rocket::response::Responder<'r, 'o> for Error {
             context.insert("message", &self.to_string());
         }
 
-        let tera = tera_hot::Template::new(crate::TEMPLATE_DIR);
-        let template = tera.render("error.html", &context).unwrap();
+        let template = rocket_dyn_templates::Template::render("error", &context.into_json());
         let response = rocket::response::content::Html(template);
 
         response.respond_to(request)

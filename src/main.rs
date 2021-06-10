@@ -8,9 +8,7 @@ use std::collections::HashMap;
 
 type Flash = rocket::response::Flash<rocket::response::Redirect>;
 type Result<T> = std::result::Result<T, crate::Error>;
-type Response = rocket::response::content::Html<String>;
-
-static TEMPLATE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/templates");
+type Response = rocket_dyn_templates::Template;
 
 macro_rules! read {
     ($entry:ident -> String) => {{
@@ -156,22 +154,6 @@ impl Into<expense::Entity> for FormData {
     }
 }
 
-struct AppData {
-    pub template: tera_hot::Template,
-}
-
-impl AppData {
-    fn new() -> Self {
-        let mut template = tera_hot::Template::new(TEMPLATE_DIR);
-        template.register_function("has_media", Box::new(has_media));
-        template.register_function("pager", elephantry_extras::tera::Pager);
-
-        Self {
-            template
-        }
-    }
-}
-
 #[rocket::launch]
 async fn launch() -> _ {
     rocket::build()
@@ -192,7 +174,14 @@ async fn launch() -> _ {
                 })
             },
         ))
-        .manage(AppData::new())
+        .attach(rocket_dyn_templates::Template::custom(|engines| {
+            engines
+                .tera
+                .register_function("has_media", Box::new(has_media));
+            engines
+                .tera
+                .register_function("pager", elephantry_extras::tera::Pager);
+        }))
         .mount(
             "/static",
             rocket::fs::FileServer::from(concat!(env!("CARGO_MANIFEST_DIR"), "/static")),
@@ -219,7 +208,6 @@ struct DataDir(String);
 async fn index(
     database: Database,
     data_dir: &rocket::State<DataDir>,
-    data: &rocket::State<AppData>,
     params: Params,
     flash: Option<rocket::request::FlashMessage<'_>>,
 ) -> Result<Response> {
@@ -245,17 +233,17 @@ async fn index(
         &flash.map(|x| (x.kind().to_string(), x.message().to_string())),
     );
 
-    let template = data.template.render("expense/list.html", &context)?;
+    let template = rocket_dyn_templates::Template::render("expense/list", &context.into_json());
 
-    Ok(rocket::response::content::Html(template))
+    Ok(template)
 }
 
 #[rocket::get("/expenses/add")]
-async fn add(data: &rocket::State<AppData>) -> Result<Response> {
+async fn add() -> Result<Response> {
     let context = tera::Context::new();
-    let template = data.template.render("expense/edit.html", &context)?;
+    let template = rocket_dyn_templates::Template::render("expense/edit", &context.into_json());
 
-    Ok(rocket::response::content::Html(template))
+    Ok(template)
 }
 
 #[rocket::post("/expenses/add", data = "<form_data>")]
@@ -268,16 +256,15 @@ async fn create(
 }
 
 #[rocket::get("/expenses/<id>/edit")]
-async fn edit(database: Database, data: &rocket::State<AppData>, id: i32) -> Result<Option<Response>> {
+async fn edit(database: Database, id: i32) -> Result<Option<Response>> {
     let expense = match database.get(id).await? {
         Some(expense) => expense,
         None => return Ok(None),
     };
     let context = tera::Context::from_serialize(expense)?;
-    let template = data.template.render("expense/edit.html", &context)?;
-    let response = rocket::response::content::Html(template);
+    let template = rocket_dyn_templates::Template::render("expense/edit", &context.into_json());
 
-    Ok(Some(response))
+    Ok(Some(template))
 }
 
 #[rocket::post("/expenses/<id>/edit", data = "<form_data>")]
