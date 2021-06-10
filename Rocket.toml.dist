@@ -1,7 +1,7 @@
 [global]
 address = "127.0.0.1"
 port = 8000
-log = "normal"
+log_level = "normal"
 data_dir = "/mnt/data/sav"
 
 [global.databases.sav]
