@@ -1,4 +1,4 @@
-#[derive(Debug, elephantry::Entity, serde_derive::Serialize)]
+#[derive(Debug, elephantry::Entity, serde::Serialize)]
 #[elephantry(model = "Model", structure = "Structure", relation = "public.expense")]
 pub struct Entity {
     #[elephantry(pk)]
