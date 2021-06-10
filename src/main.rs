@@ -10,51 +10,7 @@ type Flash = rocket::response::Flash<rocket::response::Redirect>;
 type Result<T> = std::result::Result<T, crate::Error>;
 type Response = rocket_dyn_templates::Template;
 
-macro_rules! read {
-    ($entry:ident -> String) => {{
-        use std::io::Read;
-        let mut t = String::new();
-        $entry.data.read_to_string(&mut t).expect("not text");
-
-        if t.is_empty() {
-            None
-        } else {
-            Some(t)
-        }
-    }};
-
-    ($entry:ident -> Vec) => {{
-        use std::io::Read;
-        let mut t = Vec::new();
-        $entry.data.read_to_end(&mut t).expect("not text");
-
-        if t.is_empty() {
-            None
-        } else {
-            Some(t)
-        }
-    }};
-
-    ($entry:ident -> $ty:ty) => {{
-        read!($entry -> String).map(|x| x.parse().unwrap())
-    }};
-}
-
-macro_rules! field {
-    ($form_data:ident . $field:ident = $entry:ident as Option<$ty:ident>) => {{
-        if &*$entry.headers.name == stringify!($field) {
-            $form_data.$field = read!($entry -> $ty);
-        }
-    }};
-
-    ($form_data:ident . $field:ident = $entry:ident as $ty:ident) => {{
-        if &*$entry.headers.name == stringify!($field) {
-            $form_data.$field = read!($entry -> $ty).unwrap();
-        }
-    }};
-}
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, rocket::FromForm)]
 struct FormData {
     pub id: Option<i32>,
     pub created_at: String,
@@ -74,63 +30,6 @@ impl FormData {
         chrono::NaiveDate::parse_from_str(date, "%F")
             .unwrap()
             .and_hms(0, 0, 0)
-    }
-}
-
-impl Default for FormData {
-    fn default() -> Self {
-        Self {
-            id: None,
-            created_at: String::new(),
-            serial: None,
-            name: String::new(),
-            url: None,
-            shop: String::new(),
-            warranty: 0,
-            price: 0.,
-            photo: None,
-            invoice: None,
-            notice: None,
-        }
-    }
-}
-
-#[rocket::async_trait]
-impl<'r> rocket::data::FromData<'r> for FormData {
-    type Error = crate::Error;
-
-    async fn from_data(
-        request: &'r rocket::Request<'_>,
-        data: rocket::Data<'r>,
-    ) -> rocket::data::Outcome<'r, Self> {
-        let d = <&'r str>::from_data(request, data).await.unwrap();
-        let ct = request
-            .headers()
-            .get_one("Content-Type")
-            .expect("no content-type");
-        let idx = ct.find("boundary=").expect("no boundary");
-        let boundary = &ct[(idx + "boundary=".len())..];
-
-        let mut mp = multipart::server::Multipart::with_body(d.as_bytes(), boundary);
-
-        let mut form_data = FormData::default();
-
-        mp.foreach_entry(|mut entry| {
-            field!(form_data.id = entry as Option<i32>);
-            field!(form_data.created_at = entry as String);
-            field!(form_data.serial = entry as Option<String>);
-            field!(form_data.name = entry as String);
-            field!(form_data.url = entry as Option<String>);
-            field!(form_data.shop = entry as String);
-            field!(form_data.warranty = entry as i32);
-            field!(form_data.price = entry as f32);
-            field!(form_data.photo = entry as Option<Vec>);
-            field!(form_data.invoice = entry as Option<Vec>);
-            field!(form_data.notice = entry as Option<Vec>);
-        })
-        .expect("Unable to iterate");
-
-        rocket::data::Outcome::Success(form_data)
     }
 }
 
@@ -250,7 +149,7 @@ async fn add() -> Result<Response> {
 async fn create(
     database: Database,
     data_dir: &rocket::State<DataDir>,
-    form_data: FormData,
+    form_data: rocket::form::Form<FormData>,
 ) -> Result<Flash> {
     save(database, data_dir, -1, form_data).await
 }
@@ -272,7 +171,7 @@ async fn save(
     database: Database,
     data_dir: &rocket::State<DataDir>,
     id: i32,
-    form_data: FormData,
+    form_data: rocket::form::Form<FormData>,
 ) -> Result<Flash> {
     let entity = form_data.clone().into();
 
