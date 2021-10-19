@@ -150,19 +150,19 @@ impl<'a> rocket::data::FromData<'a> for FormData {
     }
 }
 
-impl Into<expense::Entity> for FormData {
-    fn into(self) -> expense::Entity {
-        expense::Entity {
-            id: self.id,
-            created_at: Self::parse_date(&self.created_at),
-            serial: self.serial.clone(),
-            name: self.name.clone(),
-            url: self.url.clone(),
-            shop: self.shop.clone(),
-            warranty: self.warranty,
-            price: self.price,
+impl From<FormData> for expense::Entity {
+    fn from(data: FormData) -> Self {
+        Self {
+            id: data.id,
+            created_at: FormData::parse_date(&data.created_at),
+            serial: data.serial.clone(),
+            name: data.name.clone(),
+            url: data.url.clone(),
+            shop: data.shop.clone(),
+            warranty: data.warranty,
+            price: data.price,
 
-            warranty_at: Self::parse_date(&self.created_at),
+            warranty_at: FormData::parse_date(&data.created_at),
             warranty_active: false,
             trashed: false,
         }
@@ -334,7 +334,7 @@ fn write_file(
         return Ok(());
     }
 
-    let path = media_path(&data_dir, expense.id.unwrap(), file_type);
+    let path = media_path(data_dir, expense.id.unwrap(), file_type);
 
     let dir = path.parent().unwrap();
     if !dir.exists() {
