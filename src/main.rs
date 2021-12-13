@@ -1,4 +1,5 @@
 #![feature(proc_macro_hygiene, decl_macro)]
+#![warn(warnings)]
 
 mod database;
 mod error;
