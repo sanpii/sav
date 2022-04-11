@@ -59,7 +59,7 @@ macro_rules! field {
     }};
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 struct FormData {
     pub id: Option<i32>,
     pub created_at: String,
@@ -79,24 +79,6 @@ impl FormData {
         chrono::NaiveDate::parse_from_str(date, "%F")
             .unwrap()
             .and_hms(0, 0, 0)
-    }
-}
-
-impl Default for FormData {
-    fn default() -> Self {
-        Self {
-            id: None,
-            created_at: String::new(),
-            serial: None,
-            name: String::new(),
-            url: None,
-            shop: String::new(),
-            warranty: 0,
-            price: 0.,
-            photo: None,
-            invoice: None,
-            notice: None,
-        }
     }
 }
 
