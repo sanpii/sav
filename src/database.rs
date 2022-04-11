@@ -84,4 +84,10 @@ impl Database {
         self.0
             .update_by_pk::<crate::expense::Model>(&elephantry::pk!(id), &data)
     }
+
+    pub fn shops(&self) -> elephantry::Result<Vec<String>> {
+        let rows = self.0.query("select distinct shop from expense order by 1", &[])?;
+
+        Ok(rows.into_vec())
+    }
 }

@@ -248,8 +248,9 @@ fn index(
 }
 
 #[rocket::get("/expenses/add")]
-fn add(data: rocket::State<AppData>) -> Result<Response> {
-    let context = tera::Context::new();
+fn add(database: Database, data: rocket::State<AppData>) -> Result<Response> {
+    let mut context = tera::Context::new();
+    context.insert("shops", &database.shops()?);
     let template = data.template.render("expense/edit.html", &context)?;
 
     Ok(rocket::response::content::Html(template))
@@ -270,7 +271,8 @@ fn edit(database: Database, data: rocket::State<AppData>, id: i32) -> Result<Opt
         Some(expense) => expense,
         None => return Ok(None),
     };
-    let context = tera::Context::from_serialize(expense)?;
+    let mut context = tera::Context::from_serialize(expense)?;
+    context.insert("shops", &database.shops()?);
     let template = data.template.render("expense/edit.html", &context)?;
     let response = rocket::response::content::Html(template);
 
