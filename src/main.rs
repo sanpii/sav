@@ -227,7 +227,7 @@ fn index(
     let pager = database.all(&params.q, page, limit, trashed)?;
 
     let base_url = if let Some(q) = &params.q {
-        format!("/?q={}", q)
+        format!("/?q={q}")
     } else {
         String::new()
     };
@@ -386,7 +386,7 @@ fn media(data_dir: &str, id: i32, file_type: &str) -> Option<rocket::response::N
 }
 
 fn media_path(data_dir: &str, id: i32, file_type: &str) -> std::path::PathBuf {
-    let filename = format!("{}/{}/{}", data_dir, id, file_type);
+    let filename = format!("{data_dir}/{id}/{file_type}");
 
     std::path::PathBuf::from(&filename)
 }
