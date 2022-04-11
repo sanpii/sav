@@ -22,8 +22,9 @@ impl<'a> rocket::response::Responder<'a> for Error {
 
         let tera = tera_hot::Template::new(crate::TEMPLATE_DIR);
         let template = tera.render("error.html", &context);
-        let response = rocket::response::content::Html(template);
+        let mut response = rocket::response::content::Html(template).respond_to(request)?;
+        response.set_status(rocket::http::Status::InternalServerError);
 
-        response.respond_to(request)
+        Ok(response)
     }
 }
