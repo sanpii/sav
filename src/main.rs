@@ -10,7 +10,7 @@ use error::Error;
 use std::collections::HashMap;
 
 type Flash = rocket::response::Flash<rocket::response::Redirect>;
-type Result<T> = std::result::Result<T, crate::Error>;
+type Result<T = ()> = std::result::Result<T, crate::Error>;
 type Response = rocket::response::content::Html<String>;
 
 static TEMPLATE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/templates");
@@ -168,7 +168,7 @@ impl AppData {
     }
 }
 
-fn main() -> Result<()> {
+fn main() -> Result {
     rocket::ignite()
         .attach(Database::fairing())
         .attach(rocket::fairing::AdHoc::on_attach(
@@ -310,7 +310,7 @@ fn write_file(
     file_type: &str,
     content: &[u8],
     expense: &crate::expense::Entity,
-) -> Result<()> {
+) -> Result {
     use std::io::Write;
 
     if content.is_empty() {
