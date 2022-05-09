@@ -1,4 +1,3 @@
-#![feature(proc_macro_hygiene, decl_macro)]
 #![warn(warnings)]
 
 mod database;
@@ -11,9 +10,7 @@ use std::collections::HashMap;
 
 type Flash = rocket::response::Flash<rocket::response::Redirect>;
 type Result<T = ()> = std::result::Result<T, crate::Error>;
-type Response = rocket::response::content::Html<String>;
-
-static TEMPLATE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/templates");
+type Response = rocket_dyn_templates::Template;
 
 macro_rules! read {
     ($entry:ident -> String) => {{
@@ -82,26 +79,15 @@ impl FormData {
     }
 }
 
-impl<'a> rocket::data::FromData<'a> for FormData {
-    type Owned = Vec<u8>;
-    type Borrowed = [u8];
+#[rocket::async_trait]
+impl<'r> rocket::data::FromData<'r> for FormData {
     type Error = crate::Error;
 
-    fn transform(
-        _request: &rocket::Request,
-        data: rocket::Data,
-    ) -> rocket::data::Transform<rocket::data::Outcome<Self::Owned, Self::Error>> {
-        let mut d = Vec::new();
-        data.stream_to(&mut d).expect("Unable to read");
-
-        rocket::data::Transform::Owned(rocket::data::Outcome::Success(d))
-    }
-
-    fn from_data(
-        request: &rocket::Request,
-        outcome: rocket::data::Transformed<'a, Self>,
-    ) -> rocket::data::Outcome<Self, Self::Error> {
-        let d = outcome.owned()?;
+    async fn from_data(
+        request: &'r rocket::Request<'_>,
+        data: rocket::Data<'r>,
+    ) -> rocket::data::Outcome<'r, Self> {
+        let d = <&'r str>::from_data(request, data).await.unwrap();
 
         let ct = request
             .headers()
@@ -110,7 +96,7 @@ impl<'a> rocket::data::FromData<'a> for FormData {
         let idx = ct.find("boundary=").expect("no boundary");
         let boundary = &ct[(idx + "boundary=".len())..];
 
-        let mut mp = multipart::server::Multipart::with_body(&d[..], boundary);
+        let mut mp = multipart::server::Multipart::with_body(d.as_bytes(), boundary);
 
         let mut form_data = FormData::default();
 
@@ -153,42 +139,37 @@ impl From<FormData> for expense::Entity {
     }
 }
 
-struct AppData {
-    pub template: tera_hot::Template,
-}
-
-impl AppData {
-    fn new() -> Self {
-        let mut template = tera_hot::Template::new(TEMPLATE_DIR);
-        template.register_function("has_media", Box::new(has_media));
-        template.register_function("pager", elephantry_extras::tera::Pager);
-
-        Self { template }
-    }
-}
-
-fn main() {
-    rocket::ignite()
+#[rocket::launch]
+async fn launch() -> _ {
+    rocket::build()
         .attach(Database::fairing())
-        .attach(rocket::fairing::AdHoc::on_attach(
+        .attach(rocket::fairing::AdHoc::on_ignite(
             "data_dir config",
             |rocket| {
-                let data_dir = rocket
-                    .config()
-                    .get_str("data_dir")
-                    .unwrap_or("data/")
-                    .to_string();
+                Box::pin(async {
+                    let data_dir = rocket
+                        .figment()
+                        .find_value("data_dir")
+                        .unwrap()
+                        .as_str()
+                        .unwrap_or("data/")
+                        .to_string();
 
-                Ok(rocket.manage(DataDir(data_dir)))
+                    rocket.manage(DataDir(data_dir))
+                })
             },
         ))
-        .manage(AppData::new())
+        .attach(rocket_dyn_templates::Template::custom(|engines| {
+            engines
+                .tera
+                .register_function("has_media", Box::new(has_media));
+            engines
+                .tera
+                .register_function("pager", elephantry_extras::tera::Pager);
+        }))
         .mount(
             "/static",
-            rocket_contrib::serve::StaticFiles::from(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/static"
-            )),
+            rocket::fs::FileServer::from(concat!(env!("CARGO_MANIFEST_DIR"), "/static")),
         )
         .mount(
             "/",
@@ -196,7 +177,6 @@ fn main() {
                 index, add, create, edit, save, delete, trash, untrash, photo, invoice, notice,
             ],
         )
-        .launch();
 }
 
 #[derive(rocket::FromForm)]
@@ -210,18 +190,17 @@ struct Params {
 struct DataDir(String);
 
 #[rocket::get("/?<params..>")]
-fn index(
+async fn index(
     database: Database,
-    data_dir: rocket::State<DataDir>,
-    data: rocket::State<AppData>,
-    params: rocket::request::Form<Params>,
-    flash: Option<rocket::request::FlashMessage>,
+    data_dir: &rocket::State<DataDir>,
+    params: Params,
+    flash: Option<rocket::request::FlashMessage<'_>>,
 ) -> Result<Response> {
     let page = params.page.unwrap_or(1);
     let trashed = params.trashed.unwrap_or(false);
     let limit = params.limit.unwrap_or(50);
 
-    let pager = database.all(&params.q, page, limit, trashed)?;
+    let pager = database.all(params.q.clone(), page, limit, trashed).await?;
 
     let base_url = if let Some(q) = &params.q {
         format!("/?q={q}")
@@ -236,59 +215,61 @@ fn index(
     context.insert("q", &params.q);
     context.insert(
         "flash",
-        &flash.map(|x| (x.name().to_string(), x.msg().to_string())),
+        &flash.map(|x| (x.kind().to_string(), x.message().to_string())),
     );
 
-    let template = data.template.render("expense/list.html", &context)?;
+    let template = rocket_dyn_templates::Template::render("expense/list", context.into_json());
 
-    Ok(rocket::response::content::Html(template))
+    Ok(template)
 }
 
 #[rocket::get("/expenses/add")]
-fn add(database: Database, data: rocket::State<AppData>) -> Result<Response> {
+async fn add(database: Database) -> Result<Response> {
     let mut context = tera::Context::new();
-    context.insert("shops", &database.shops()?);
-    let template = data.template.render("expense/edit.html", &context)?;
+    context.insert("shops", &database.shops().await?);
+    let template = rocket_dyn_templates::Template::render("expense/edit", context.into_json());
 
-    Ok(rocket::response::content::Html(template))
+    Ok(template)
 }
 
 #[rocket::post("/expenses/add", data = "<form_data>")]
-fn create(
+async fn create(
     database: Database,
-    data_dir: rocket::State<DataDir>,
+    data_dir: &rocket::State<DataDir>,
     form_data: FormData,
 ) -> Result<Flash> {
-    save(database, data_dir, -1, form_data)
+    save(database, data_dir, -1, form_data).await
 }
 
 #[rocket::get("/expenses/<id>/edit")]
-fn edit(database: Database, data: rocket::State<AppData>, id: i32) -> Result<Option<Response>> {
-    let expense = match database.get(id)? {
+async fn edit(database: Database, id: i32) -> Result<Option<Response>> {
+    let expense = match database.get(id).await? {
         Some(expense) => expense,
         None => return Ok(None),
     };
     let mut context = tera::Context::from_serialize(expense)?;
-    context.insert("shops", &database.shops()?);
-    let template = data.template.render("expense/edit.html", &context)?;
-    let response = rocket::response::content::Html(template);
+    context.insert("shops", &database.shops().await?);
+    let template = rocket_dyn_templates::Template::render("expense/edit", context.into_json());
 
-    Ok(Some(response))
+    Ok(Some(template))
 }
 
 #[rocket::post("/expenses/<id>/edit", data = "<form_data>")]
-fn save(
+async fn save(
     database: Database,
-    data_dir: rocket::State<DataDir>,
+    data_dir: &rocket::State<DataDir>,
     id: i32,
     form_data: FormData,
 ) -> Result<Flash> {
     let entity = form_data.clone().into();
 
     let (entity, msg) = if id > 0 {
-        (database.update(id, &entity)?.unwrap(), "Achat mis à jour")
+        (
+            database.update(id, entity).await?.unwrap(),
+            "Achat mis à jour",
+        )
     } else {
-        (database.create(&entity)?, "Achat créé")
+        (database.create(entity).await?, "Achat créé")
     };
 
     if let Some(photo) = &form_data.photo {
@@ -331,8 +312,8 @@ fn write_file(
 }
 
 #[rocket::get("/expenses/<id>/delete")]
-fn delete(database: Database, data_dir: rocket::State<DataDir>, id: i32) -> Result<Flash> {
-    database.delete(id)?;
+async fn delete(database: Database, data_dir: &rocket::State<DataDir>, id: i32) -> Result<Flash> {
+    database.delete(id).await?;
     std::fs::remove_dir_all(media_path(&data_dir.0, id, "photo").parent().unwrap())?;
 
     Ok(Flash::success(
@@ -342,8 +323,8 @@ fn delete(database: Database, data_dir: rocket::State<DataDir>, id: i32) -> Resu
 }
 
 #[rocket::get("/expenses/<id>/trash")]
-fn trash(database: Database, id: i32) -> Result<Flash> {
-    database.trash(id)?;
+async fn trash(database: Database, id: i32) -> Result<Flash> {
+    database.trash(id).await?;
 
     Ok(Flash::success(
         rocket::response::Redirect::to("/"),
@@ -352,8 +333,8 @@ fn trash(database: Database, id: i32) -> Result<Flash> {
 }
 
 #[rocket::get("/expenses/<id>/untrash")]
-fn untrash(database: Database, id: i32) -> Result<Flash> {
-    database.untrash(id)?;
+async fn untrash(database: Database, id: i32) -> Result<Flash> {
+    database.untrash(id).await?;
 
     Ok(Flash::success(
         rocket::response::Redirect::to("/"),
@@ -362,24 +343,24 @@ fn untrash(database: Database, id: i32) -> Result<Flash> {
 }
 
 #[rocket::get("/expenses/<id>/photo")]
-fn photo(data_dir: rocket::State<DataDir>, id: i32) -> Option<rocket::response::NamedFile> {
-    media(&data_dir.0, id, "photo")
+async fn photo(data_dir: &rocket::State<DataDir>, id: i32) -> Option<rocket::fs::NamedFile> {
+    media(&data_dir.0, id, "photo").await
 }
 
 #[rocket::get("/expenses/<id>/invoice")]
-fn invoice(data_dir: rocket::State<DataDir>, id: i32) -> Option<rocket::response::NamedFile> {
-    media(&data_dir.0, id, "invoice")
+async fn invoice(data_dir: &rocket::State<DataDir>, id: i32) -> Option<rocket::fs::NamedFile> {
+    media(&data_dir.0, id, "invoice").await
 }
 
 #[rocket::get("/expenses/<id>/notice")]
-fn notice(data_dir: rocket::State<DataDir>, id: i32) -> Option<rocket::response::NamedFile> {
-    media(&data_dir.0, id, "notice")
+async fn notice(data_dir: &rocket::State<DataDir>, id: i32) -> Option<rocket::fs::NamedFile> {
+    media(&data_dir.0, id, "notice").await
 }
 
-fn media(data_dir: &str, id: i32, file_type: &str) -> Option<rocket::response::NamedFile> {
+async fn media(data_dir: &str, id: i32, file_type: &str) -> Option<rocket::fs::NamedFile> {
     let path = media_path(data_dir, id, file_type);
 
-    rocket::response::NamedFile::open(path).ok()
+    rocket::fs::NamedFile::open(path).await.ok()
 }
 
 fn media_path(data_dir: &str, id: i32, file_type: &str) -> std::path::PathBuf {
