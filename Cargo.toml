@@ -7,25 +7,23 @@ license = "MIT"
 
 [dependencies]
 mime = "0.3"
-rocket = "0.4"
-multipart = "0.18"
-serde = "1.0"
-serde_derive = "1.0"
+rocket = "0.5"
 tera = "1.5"
-tera-hot = "0.4"
 thiserror = "1.0"
 
 [dependencies.chrono]
 version = "0.4"
 features = ["serde"]
 
-[dependencies.rocket_contrib]
-version = "0.4"
-default-features = false
-features = ["databases", "serve"]
+[dependencies.rocket_sync_db_pools]
+version = "0.1"
+
+[dependencies.rocket_dyn_templates]
+version = "0.1"
+features = ["tera"]
 
 [dependencies.elephantry]
-version = "3.0"
+version = "4.0.0-rc.2"
 features = ["date", "rocket", "serde"]
 
 [dependencies.elephantry-extras]

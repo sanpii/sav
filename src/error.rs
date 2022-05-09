@@ -1,7 +1,5 @@
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Config error: {0}")]
-    Config(#[from] rocket::config::ConfigError),
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     #[error("Parse error: {0}")]
@@ -12,17 +10,18 @@ pub enum Error {
     Template(#[from] tera::Error),
 }
 
-impl<'a> rocket::response::Responder<'a> for Error {
-    fn respond_to(self, request: &rocket::Request) -> rocket::response::Result<'a> {
+impl<'r, 'o: 'r> rocket::response::Responder<'r, 'o> for Error {
+    fn respond_to(self, request: &rocket::Request) -> rocket::response::Result<'o> {
         let mut context = tera::Context::new();
 
         if cfg!(debug_assertions) {
             context.insert("message", &self.to_string());
         }
 
-        let tera = tera_hot::Template::new(crate::TEMPLATE_DIR);
-        let template = tera.render("error.html", &context);
-        let mut response = rocket::response::content::Html(template).respond_to(request)?;
+        let template = rocket_dyn_templates::Template::render("error", context.into_json());
+        let html = rocket::response::content::RawHtml(template);
+
+        let mut response = html.respond_to(request)?;
         response.set_status(rocket::http::Status::InternalServerError);
 
         Ok(response)

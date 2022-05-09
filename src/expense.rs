@@ -1,5 +1,6 @@
-#[derive(Debug, elephantry::Entity, serde_derive::Serialize)]
+#[derive(Debug, elephantry::Entity, rocket::serde::Serialize)]
 #[elephantry(model = "Model", structure = "Structure", relation = "public.expense")]
+#[serde(crate = "rocket::serde")]
 pub struct Entity {
     #[elephantry(pk)]
     pub id: Option<i32>,
