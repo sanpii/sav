@@ -10,6 +10,8 @@ pub struct Entity {
     pub shop: String,
     pub warranty: i32,
     pub price: f32,
+    pub trashed_at: Option<chrono::NaiveDateTime>,
+
     #[elephantry(virtual = "%:created_at:% + (%:warranty:% || ' years')::interval")]
     pub warranty_at: chrono::NaiveDateTime,
     #[elephantry(virtual = "%:created_at:% + (%:warranty:% || ' years')::interval > now()")]

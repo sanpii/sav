@@ -144,6 +144,7 @@ impl From<FormData> for expense::Entity {
             shop: data.shop.clone(),
             warranty: data.warranty,
             price: data.price,
+            trashed_at: None,
 
             warranty_at: FormData::parse_date(&data.created_at),
             warranty_active: false,
