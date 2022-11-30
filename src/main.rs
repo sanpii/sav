@@ -78,7 +78,7 @@ impl FormData {
     fn parse_date(date: &str) -> chrono::NaiveDateTime {
         chrono::NaiveDate::parse_from_str(date, "%F")
             .unwrap()
-            .and_hms(0, 0, 0)
+            .and_time(chrono::NaiveTime::default())
     }
 }
 

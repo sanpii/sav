@@ -70,7 +70,7 @@ impl Database {
         trash: bool,
     ) -> elephantry::Result<Option<crate::expense::Entity>> {
         let trashed_at = if trash {
-            Some(chrono::offset::Local::now().date().naive_local())
+            Some(chrono::offset::Local::now().date_naive())
         } else {
             None
         };
