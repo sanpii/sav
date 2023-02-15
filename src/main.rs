@@ -158,18 +158,16 @@ struct AppData {
 }
 
 impl AppData {
-    fn new() -> Result<Self> {
+    fn new() -> Self {
         let mut template = tera_hot::Template::new(TEMPLATE_DIR);
         template.register_function("has_media", Box::new(has_media));
         template.register_function("pager", elephantry_extras::tera::Pager);
 
-        let app_data = Self { template };
-
-        Ok(app_data)
+        Self { template }
     }
 }
 
-fn main() -> Result {
+fn main() {
     rocket::ignite()
         .attach(Database::fairing())
         .attach(rocket::fairing::AdHoc::on_attach(
@@ -184,7 +182,7 @@ fn main() -> Result {
                 Ok(rocket.manage(DataDir(data_dir)))
             },
         ))
-        .manage(AppData::new()?)
+        .manage(AppData::new())
         .mount(
             "/static",
             rocket_contrib::serve::StaticFiles::from(concat!(
@@ -199,8 +197,6 @@ fn main() -> Result {
             ],
         )
         .launch();
-
-    Ok(())
 }
 
 #[derive(rocket::FromForm)]
