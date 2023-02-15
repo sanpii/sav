@@ -379,7 +379,7 @@ fn notice(data_dir: rocket::State<DataDir>, id: i32) -> Option<rocket::response:
 fn media(data_dir: &str, id: i32, file_type: &str) -> Option<rocket::response::NamedFile> {
     let path = media_path(data_dir, id, file_type);
 
-    rocket::response::NamedFile::open(&path).ok()
+    rocket::response::NamedFile::open(path).ok()
 }
 
 fn media_path(data_dir: &str, id: i32, file_type: &str) -> std::path::PathBuf {
