@@ -12,7 +12,7 @@ multipart = "0.18"
 serde = "1.0"
 serde_derive = "1.0"
 tera = "1.5"
-tera-hot = "0.3"
+tera-hot = "0.4"
 thiserror = "1.0"
 
 [dependencies.chrono]
