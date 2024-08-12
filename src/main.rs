@@ -12,9 +12,9 @@ type Flash = rocket::response::Flash<rocket::response::Redirect>;
 type Result<T = ()> = std::result::Result<T, crate::Error>;
 type Response = rocket_dyn_templates::Template;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 #[derive(rocket::FromForm)]
-struct FormData {
+struct FormData<'r> {
     pub id: Option<i32>,
     pub created_at: String,
     pub serial: Option<String>,
@@ -23,36 +23,16 @@ struct FormData {
     pub shop: String,
     pub warranty: i32,
     pub price: f32,
-    pub photo: Option<Vec<u8>>,
-    pub invoice: Option<Vec<u8>>,
-    pub notice: Option<Vec<u8>>,
+    pub photo: Option<rocket::fs::TempFile<'r>>,
+    pub invoice: Option<rocket::fs::TempFile<'r>>,
+    pub notice: Option<rocket::fs::TempFile<'r>>,
 }
 
-impl FormData {
+impl<'r> FormData<'r> {
     fn parse_date(date: &str) -> chrono::NaiveDateTime {
         chrono::NaiveDate::parse_from_str(date, "%F")
             .unwrap()
             .and_time(chrono::NaiveTime::default())
-    }
-}
-
-impl From<FormData> for expense::Entity {
-    fn from(data: FormData) -> Self {
-        Self {
-            id: data.id,
-            created_at: FormData::parse_date(&data.created_at),
-            serial: data.serial.clone(),
-            name: data.name.clone(),
-            url: data.url.clone(),
-            shop: data.shop.clone(),
-            warranty: data.warranty,
-            price: data.price,
-            trashed_at: None,
-
-            warranty_at: FormData::parse_date(&data.created_at),
-            warranty_active: false,
-            trashed: false,
-        }
     }
 }
 
@@ -150,10 +130,10 @@ async fn add(database: Database) -> Result<Response> {
 }
 
 #[rocket::post("/expenses/add", data = "<form_data>")]
-async fn create(
+async fn create<'r>(
     database: Database,
     data_dir: &rocket::State<DataDir>,
-    form_data: rocket::form::Form<FormData>,
+    form_data: rocket::form::Form<FormData<'r>>,
 ) -> Result<Flash> {
     save(database, data_dir, -1, form_data).await
 }
@@ -172,13 +152,13 @@ async fn edit(database: Database, id: i32) -> Result<Option<Response>> {
 }
 
 #[rocket::post("/expenses/<id>/edit", data = "<form_data>")]
-async fn save(
+async fn save<'r>(
     database: Database,
     data_dir: &rocket::State<DataDir>,
     id: i32,
-    form_data: rocket::form::Form<FormData>,
+    mut form_data: rocket::form::Form<FormData<'r>>,
 ) -> Result<Flash> {
-    let entity = form_data.clone().into();
+    let entity = expense::Entity::from(&form_data);
 
     let (entity, msg) = if id > 0 {
         (
@@ -189,41 +169,37 @@ async fn save(
         (database.create(entity).await?, "Achat créé")
     };
 
-    if let Some(photo) = &form_data.photo {
-        write_file(&data_dir.0, "photo", photo, &entity)?;
+    if let Some(ref mut photo) = form_data.photo {
+        write_file(&data_dir.0, "photo", photo, &entity).await?;
     }
-    if let Some(invoice) = &form_data.invoice {
-        write_file(&data_dir.0, "invoice", invoice, &entity)?;
+    if let Some(ref mut invoice) = form_data.invoice {
+        write_file(&data_dir.0, "invoice", invoice, &entity).await?;
     }
-    if let Some(notice) = &form_data.notice {
-        write_file(&data_dir.0, "notice", notice, &entity)?;
+    if let Some(ref mut notice) = form_data.notice {
+        write_file(&data_dir.0, "notice", notice, &entity).await?;
     }
 
     Ok(Flash::success(rocket::response::Redirect::to("/"), msg))
 }
 
-fn write_file(
+async fn write_file<'r>(
     data_dir: &str,
     file_type: &str,
-    content: &[u8],
+    file: &mut rocket::fs::TempFile<'r>,
     expense: &crate::expense::Entity,
 ) -> Result {
-    use std::io::Write;
+    let path = media_path(data_dir, expense.id.unwrap(), file_type);
 
-    if content.is_empty() {
+    if file.len() == 0 {
         return Ok(());
     }
-
-    let path = media_path(data_dir, expense.id.unwrap(), file_type);
 
     let dir = path.parent().unwrap();
     if !dir.exists() {
         std::fs::create_dir(dir)?;
     }
 
-    let mut file = std::fs::File::create(&path)?;
-
-    file.write_all(content)?;
+    file.move_copy_to(&path).await?;
 
     Ok(())
 }

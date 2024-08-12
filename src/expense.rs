@@ -20,3 +20,24 @@ pub struct Entity {
     #[elephantry(virtual = "%:trashed_at:% is not null")]
     pub trashed: bool,
 }
+
+impl Entity {
+    pub fn from<'r>(data: &crate::FormData<'r>) -> Self {
+        Self {
+            id: data.id,
+            created_at: crate::FormData::parse_date(&data.created_at),
+            serial: data.serial.clone(),
+            name: data.name.clone(),
+            url: data.url.clone(),
+            shop: data.shop.clone(),
+            warranty: data.warranty,
+            price: data.price,
+            trashed_at: None,
+
+            warranty_at: crate::FormData::parse_date(&data.created_at),
+            warranty_active: false,
+            trashed: false,
+        }
+    }
+}
+
