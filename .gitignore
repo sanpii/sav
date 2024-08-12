@@ -1,5 +1,6 @@
 /.env
 /Cargo.lock
+/data
 /static/lib
 /target
 /Rocket.toml
