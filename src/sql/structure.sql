@@ -7,5 +7,5 @@ CREATE TABLE expense (
     shop CHARACTER VARYING NOT NULL,
     warranty INTEGER NOT NULL,
     price REAL NOT NULL,
-    trashed_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    trashed_at TIMESTAMP WITH TIME ZONE
 );
