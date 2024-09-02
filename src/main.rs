@@ -93,11 +93,13 @@ async fn index(
     params: Params,
     flash: Option<rocket::request::FlashMessage<'_>>,
 ) -> Result<Response> {
-    let page = params.page.unwrap_or(1);
+    let pagination = elephantry_extras::Pagination {
+        page: params.page.unwrap_or(1),
+        limit: params.limit.unwrap_or(50),
+    };
     let trashed = params.trashed.unwrap_or(false);
-    let limit = params.limit.unwrap_or(50);
 
-    let pager = database.all(params.q.clone(), page, limit, trashed).await?;
+    let pager = database.all(params.q.clone(), pagination, trashed).await?;
 
     let base_url = if let Some(q) = &params.q {
         format!("/?q={q}")

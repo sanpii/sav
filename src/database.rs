@@ -5,8 +5,7 @@ impl Database {
     pub async fn all(
         &self,
         q: Option<String>,
-        page: usize,
-        limit: usize,
+        pagination: elephantry_extras::Pagination,
         trashed: bool,
     ) -> elephantry::Result<elephantry::Pager<crate::expense::Entity>> {
         self.run(move |c| {
@@ -25,8 +24,8 @@ impl Database {
             c.paginate_find_where::<crate::expense::Model>(
                 &clause.to_string(),
                 &clause.params(),
-                limit,
-                page,
+                pagination.limit,
+                pagination.page,
                 Some("order by created_at desc"),
             )
         })
