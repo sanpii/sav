@@ -22,7 +22,7 @@ pub struct Entity {
 }
 
 impl Entity {
-    pub fn from<'r>(data: &crate::FormData<'r>) -> Self {
+    pub fn from(data: &crate::FormData) -> Self {
         Self {
             id: data.id,
             created_at: crate::FormData::parse_date(&data.created_at),
