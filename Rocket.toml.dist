@@ -3,7 +3,7 @@ address = "127.0.0.1"
 port = 8000
 log_level = "normal"
 data_dir = "./data"
-limits = { data-form = "10Mb" }
+limits = { data-form = "10MiB", file = "10MiB" }
 
 [global.databases.sav]
 url = "postgres://sanpi@localhost/sav"
