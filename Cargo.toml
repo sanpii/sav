@@ -9,7 +9,7 @@ license = "MIT"
 mime = "0.3"
 rocket = "0.5"
 tera = "1.5"
-thiserror = "1.0"
+thiserror = "2.0"
 
 [dependencies.chrono]
 version = "0.4"
