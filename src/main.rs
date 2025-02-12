@@ -27,7 +27,7 @@ struct FormData<'r> {
     pub notice: Option<rocket::fs::TempFile<'r>>,
 }
 
-impl<'r> FormData<'r> {
+impl FormData<'_> {
     fn parse_date(date: &str) -> chrono::NaiveDateTime {
         chrono::NaiveDate::parse_from_str(date, "%F")
             .unwrap()
@@ -131,10 +131,10 @@ async fn add(database: Database) -> Result<Response> {
 }
 
 #[rocket::post("/expenses/add", data = "<form_data>")]
-async fn create<'r>(
+async fn create(
     database: Database,
     data_dir: &rocket::State<DataDir>,
-    form_data: rocket::form::Form<FormData<'r>>,
+    form_data: rocket::form::Form<FormData<'_>>,
 ) -> Result<Flash> {
     save(database, data_dir, -1, form_data).await
 }
@@ -153,11 +153,11 @@ async fn edit(database: Database, id: i32) -> Result<Option<Response>> {
 }
 
 #[rocket::post("/expenses/<id>/edit", data = "<form_data>")]
-async fn save<'r>(
+async fn save(
     database: Database,
     data_dir: &rocket::State<DataDir>,
     id: i32,
-    mut form_data: rocket::form::Form<FormData<'r>>,
+    mut form_data: rocket::form::Form<FormData<'_>>,
 ) -> Result<Flash> {
     let entity = expense::Entity::from(&form_data);
 
@@ -183,10 +183,10 @@ async fn save<'r>(
     Ok(Flash::success(rocket::response::Redirect::to("/"), msg))
 }
 
-async fn write_file<'r>(
+async fn write_file(
     data_dir: &str,
     file_type: &str,
-    file: &mut rocket::fs::TempFile<'r>,
+    file: &mut rocket::fs::TempFile<'_>,
     expense: &crate::expense::Entity,
 ) -> Result {
     let path = media_path(data_dir, expense.id.unwrap(), file_type);
