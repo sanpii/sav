@@ -12,8 +12,7 @@ type Flash = rocket::response::Flash<rocket::response::Redirect>;
 type Result<T = ()> = std::result::Result<T, crate::Error>;
 type Response = rocket_dyn_templates::Template;
 
-#[derive(Debug, Default)]
-#[derive(rocket::FromForm)]
+#[derive(Debug, Default, rocket::FromForm)]
 struct FormData<'r> {
     pub id: Option<i32>,
     pub created_at: String,
