@@ -27,5 +27,5 @@ version = "5.0"
 features = ["date", "rocket", "serde"]
 
 [dependencies.elephantry-extras]
-version = "0.9"
+version = "0.10"
 features = ["serde", "tera"]
