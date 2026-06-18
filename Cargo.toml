@@ -6,7 +6,6 @@ edition = "2024"
 license = "MIT"
 
 [dependencies]
-mime = "0.3"
 rocket = "0.5"
 tera = "1.5"
 thiserror = "2.0"
