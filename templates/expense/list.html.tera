@@ -17,12 +17,14 @@
         </thead>
         <tbody>
             {% for expense in pager.iterator %}
+                {% set has_notice = has_media(data_dir=data_dir, id=expense.id, file_type="notice") %}
+
                 <tr id="item-{{ expense.id }}" class="table-{% if expense.warranty_active %}success{% else %}danger{% endif %} {% if expense.trashed %}trashed{% endif %}">
                     <td><a href="#detail-{{ expense.id }}">{{ expense.name }}</a></td>
                     <td>{{ expense.created_at | date(format="%d/%m/%Y") }}</td>
                     <td>{{ expense.shop }}</td>
                     <td>{{ expense.price | round(precision=2) }} €</td>
-                    <td><span class="glyphicon glyphicon-{% if expense.hasNotice %}check{% else %}unchecked{% endif %} }}"></span></td>
+                    <td><span class="bi bi-{% if has_notice %}check2-{% endif %}square }}"></span></td>
                     <td id="detail-{{ expense.id }}" class="overlay">
                         <div class="content">
                             <a href="#item-{{ expense.id }}" class="btn-close float-end"></a>
