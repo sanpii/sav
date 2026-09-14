@@ -4,17 +4,17 @@
 pub struct Entity {
     #[elephantry(pk)]
     pub id: Option<i32>,
-    pub created_at: chrono::NaiveDateTime,
+    pub created_at: jiff::civil::DateTime,
     pub serial: Option<String>,
     pub name: String,
     pub url: Option<String>,
     pub shop: String,
     pub warranty: i32,
     pub price: f32,
-    pub trashed_at: Option<chrono::NaiveDateTime>,
+    pub trashed_at: Option<jiff::civil::DateTime>,
 
     #[elephantry(virtual = "%:created_at:% + (%:warranty:% || ' years')::interval")]
-    pub warranty_at: chrono::NaiveDateTime,
+    pub warranty_at: jiff::civil::DateTime,
     #[elephantry(virtual = "%:created_at:% + (%:warranty:% || ' years')::interval > now()")]
     pub warranty_active: bool,
     #[elephantry(virtual = "%:trashed_at:% is not null")]

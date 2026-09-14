@@ -6,13 +6,10 @@ edition = "2024"
 license = "MIT"
 
 [dependencies]
+jiff = "0.2"
 rocket = "0.5"
 tera = "1.5"
 thiserror = "2.0"
-
-[dependencies.chrono]
-version = "0.4"
-features = ["serde"]
 
 [dependencies.rocket_sync_db_pools]
 version = "0.1"
@@ -23,7 +20,7 @@ features = ["tera"]
 
 [dependencies.elephantry]
 version = "5.0"
-features = ["date", "rocket", "serde"]
+features = ["jiff", "rocket", "serde"]
 
 [dependencies.elephantry-extras]
 version = "0.10"

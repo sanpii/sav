@@ -28,10 +28,8 @@ struct FormData<'r> {
 }
 
 impl FormData<'_> {
-    fn parse_date(date: &str) -> chrono::NaiveDateTime {
-        chrono::NaiveDate::parse_from_str(date, "%F")
-            .unwrap()
-            .and_time(chrono::NaiveTime::default())
+    fn parse_date(date: &str) -> jiff::civil::DateTime {
+        jiff::civil::DateTime::strptime("%F", date).unwrap()
     }
 }
 
