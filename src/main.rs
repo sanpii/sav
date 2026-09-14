@@ -139,9 +139,8 @@ async fn create(
 
 #[rocket::get("/expenses/<id>/edit")]
 async fn edit(database: Database, id: i32) -> Result<Option<Response>> {
-    let expense = match database.get(id).await? {
-        Some(expense) => expense,
-        None => return Ok(None),
+    let Some(expense) = database.get(id).await? else {
+        return Ok(None);
     };
     let mut context = tera::Context::from_serialize(expense)?;
     context.insert("shops", &database.shops().await?);
