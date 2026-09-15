@@ -8,7 +8,7 @@ license = "MIT"
 [dependencies]
 jiff = "0.2"
 rocket = "0.5"
-tera = "1.5"
+tera = "2.4"
 thiserror = "2.0"
 
 [dependencies.rocket_sync_db_pools]
