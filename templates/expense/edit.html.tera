@@ -13,7 +13,7 @@
             <input type="hidden" name="id" value="{{ id }}" />
         {% endif %}
 
-        <div class="form-group">
+        <div class="mb-3">
             <label for="name" class="col-lg-2">Nom</label>
             <div class="col-lg-10">
                 <input
@@ -26,7 +26,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="mb-3">
             <label for="serial" class="col-lg-2">Numéro de série</label>
             <div class="col-lg-10">
                 <input
@@ -38,7 +38,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="mb-3">
             <label for="url" class="col-lg-2">URL</label>
             <div class="col-lg-10">
                 <input
@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="mb-3">
             <label for="price" class="col-lg-2">Prix</label>
             <div class="col-lg-10">
                 <div class="input-group">
@@ -68,7 +68,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="mb-3">
             <label for="shop" class="col-lg-2">Magasin</label>
             <div class="col-lg-10">
                 <input
@@ -88,7 +88,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="mb-3">
             <label for="warranty" class="col-lg-2">Garantie (en années)</label>
             <div class="col-lg-10">
                 <input
@@ -100,7 +100,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="mb-3">
             <label for="photo" class="col-lg-2">Photo</label>
             <div class="col-lg-10">
                 <input type="file" name="photo" accept="image/*" multiple
@@ -111,21 +111,21 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="mb-3">
             <label for="invoice" class="col-lg-2">Facture</label>
             <div class="col-lg-10">
                 <input type="file" name="invoice" accept="image/*,.pdf" multiple />
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="mb-3">
             <label for="notice" class="col-lg-2">Notice</label>
             <div class="col-lg-10">
                 <input type="file" name="notice" accept="image/*,.pdf" multiple />
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="mb-3">
             <label for="created_at" class="col-lg-2">Date</label>
             <div class="col-lg-10">
                 <input
@@ -138,9 +138,9 @@
             </div>
         </div>
 
-        <div class="form-actions mt-3">
-            <button type="submit" class="btn btn-primary">Enregistrer</button>
-            <a href="/" class="btn btn-outline-dark">Annuler</a>
+        <div>
+            <button type="submit" class="btn-solid theme-primary">Enregistrer</button>
+            <a href="/" class="btn-outline theme-secondary">Annuler</a>
         </div>
     </form>
 {% endblock %}

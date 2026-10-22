@@ -11,23 +11,23 @@
     </head>
     <body>
         <div class="container">
-            <div class="navbar navbar-default">
-                <a class="navbar-brand me-auto" href="/">S.A.V.</a>
+            <nav class="navbar navbar-default">
+                <a class="navbar-brand" href="/">S.A.V.</a>
 
                 <form class="d-flex">
                     <input
-                        class="form-control me-sm-2"
+                        class="form-control me-2"
                         type="search"
                         placeholder="Search"
                         name="q"
                         value="{{ q|default(value="") }}"
                     />
-                    <button class="btn btn-outline-primary" type="submit">Search</button>
+                    <button class="btn-outline theme-primary" type="submit">Search</button>
                 </form>
-            </div>
+            </nav>
 
             {% if flash %}
-                <div class="alert alert-{{ flash.0 }}">
+                <div class="alert theme-{{ flash.0 }} mb-5">
                     <p>{{ flash.1 }}</p>
                 </div>
             {% endif %}

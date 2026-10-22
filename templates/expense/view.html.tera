@@ -7,7 +7,7 @@
 </h1>
 
 <form class="form-horizontal">
-    <div class="form-group">
+    <div class="mb-3">
         <label class="col-sm-2 control-label"></label>
         <div class="col-sm-8">
             Acheté le {{ expense.created_at | date(format="%d/%m/%Y") }} chez {{ expense.shop }} pour {{ expense.price | round(precision=2) }} €
@@ -32,17 +32,17 @@
         {{ macros::form_control(label="", value='<a href="/expenses/' ~ expense.id ~ '/notice">Notice</a>') }}
     {% endif %}
 
-    <div class="form-group">
+    <div class="mb-3">
         <a href="/expenses/{{ expense.id }}/photo"><img class="center-block" src="/expenses/{{ expense.id }}/photo" /></a>
     </div>
 
-    <div class="form-group mt-3">
-        <a href="/expenses/{{ expense.id }}/edit" class="btn btn-primary"><span class="bi-pencil"></span> Modifier</a>
+    <div>
+        <a href="/expenses/{{ expense.id }}/edit" class="btn-solid theme-primary"><span class="bi-pencil"></span> Modifier</a>
         {% if not expense.trashed %}
-            <a href="/expenses/{{ expense.id }}/trash" class="btn btn-warning"><span class="bi-trash"></span> Jeter</a>
+            <a href="/expenses/{{ expense.id }}/trash" class="btn-solid theme-warning"><span class="bi-trash"></span> Jeter</a>
         {% else %}
-            <a href="/expenses/{{ expense.id }}/untrash" class="btn btn-outline-dark"><span class="bi-recycle"></span> Recycler</a>
+            <a href="/expenses/{{ expense.id }}/untrash" class="btn-outline theme-theme-secondary"><span class="bi-recycle"></span> Recycler</a>
         {% endif %}
-        <a onclick="return confirm('Êtes vous sûr ?');" href="/expenses/{{ expense.id }}/delete" class="btn btn-danger"><span class="bi-x-circle"></span> Supprimer</a>
+        <a onclick="return confirm('Êtes vous sûr ?');" href="/expenses/{{ expense.id }}/delete" class="btn-solid theme-danger"><span class="bi-x-circle"></span> Supprimer</a>
     </div>
 </form>

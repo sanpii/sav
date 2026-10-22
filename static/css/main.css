@@ -33,7 +33,12 @@
     background-color: white;
 }
 
+.overlay .content > * {
+    box-shadow: none !important;
+}
+
 .overlay .content img {
     max-width: 300px;
     max-height: 200px;
 }
+
