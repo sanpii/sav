@@ -74,7 +74,7 @@ impl Database {
     ) -> elephantry::Result<Option<crate::expense::Entity>> {
         self.run(move |c| {
             let trashed_at = if trash {
-                Some(jiff::Zoned::now().datetime())
+                Some(jiff::ZonedDateTime::now().datetime())
             } else {
                 None
             };
