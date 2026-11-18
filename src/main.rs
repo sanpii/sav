@@ -1,5 +1,3 @@
-#![warn(warnings)]
-
 mod database;
 mod error;
 mod expense;
