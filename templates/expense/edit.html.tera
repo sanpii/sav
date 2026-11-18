@@ -1,16 +1,16 @@
-{% extends "base" %}
+{% extends "base.html" %}
 
 {% block content %}
 
-    {% if id %}
-        {% set action = "/expenses/" ~ id ~ "/edit" %}
+    {% if expense.id %}
+        {% set action = "/expenses/" ~ expense.id ~ "/edit" %}
     {% else %}
         {% set action = "/expenses/add" %}
     {% endif %}
 
     <form method="post" action="{{ action }}" class="form-horizontal" role="form" enctype="multipart/form-data">
-        {% if id %}
-            <input type="hidden" name="id" value="{{ id }}" />
+        {% if expense.id %}
+            <input type="hidden" name="id" value="{{ expense.id }}" />
         {% endif %}
 
         <div class="mb-3">
@@ -18,7 +18,7 @@
             <div class="col-lg-10">
                 <input
                     type="text"
-                    value="{{ name|default(value="") }}"
+                    value="{{ expense.name|default(value="") }}"
                     name="name"
                     required="required"
                     class="form-control"
@@ -31,7 +31,7 @@
             <div class="col-lg-10">
                 <input
                     type="text"
-                    value="{{ serial|default(value="") }}"
+                    value="{{ expense.serial|default(value="") }}"
                     name="serial"
                     class="form-control"
                 />
@@ -43,7 +43,7 @@
             <div class="col-lg-10">
                 <input
                     type="text"
-                    value="{{ url|default(value="") }}"
+                    value="{{ expense.url|default(value="") }}"
                     name="url"
                     class="form-control"
                 />
@@ -57,7 +57,7 @@
                     <input
                         type="text"
                         name="price"
-                        value="{{ price | default(value=0) | round(precision=2) }}"
+                        value="{{ expense.price | default(value=0) | round(precision=2) }}"
                         class="form-control"
                         required="required"
                         pattern="[0-9]+(\.[0-9][0-9]?)?"
@@ -74,7 +74,7 @@
                 <input
                     type="text"
                     name="shop"
-                    value="{{ shop|default(value="") }}"
+                    value="{{ expense.shop|default(value="") }}"
                     class="form-control"
                     required="required"
                     list="shop-list"
@@ -92,7 +92,7 @@
             <label for="warranty" class="col-lg-2">Garantie (en années)</label>
             <div class="col-lg-10">
                 <input
-                    value="{{ warranty|default(value=0) }}"
+                    value="{{ expense.warranty|default(value=0) }}"
                     name="warranty"
                     required="required"
                     class="form-control"
@@ -104,7 +104,7 @@
             <label for="photo" class="col-lg-2">Photo</label>
             <div class="col-lg-10">
                 <input type="file" name="photo" accept="image/*" multiple
-                    {% if not id %}
+                    {% if not expense.id %}
                         required="required"
                     {% endif %}
                 />
@@ -130,7 +130,7 @@
             <div class="col-lg-10">
                 <input
                     type="date"
-                    value="{{ created_at|default(value=now())|date(format="%Y-%m-%d") }}"
+                    value="{{ expense.created_at|default(value=now())|date(format="%Y-%m-%d") }}"
                     name="created_at"
                     required="required"
                     class="form-control"

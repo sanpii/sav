@@ -8,14 +8,14 @@ license = "MIT"
 [dependencies]
 jiff = "1.0"
 rocket = "0.5"
-tera = "1.5"
+tera = "2.0"
 thiserror = "2.0"
 
 [dependencies.rocket_sync_db_pools]
 version = "0.1"
 
 [dependencies.rocket_dyn_templates]
-version = "0.2"
+version = "0.3"
 features = ["tera"]
 
 [dependencies.elephantry]
@@ -23,5 +23,5 @@ version = "6.0"
 features = ["date", "rocket", "serde"]
 
 [dependencies.elephantry-extras]
-version = "0.10"
+version = "0.13"
 features = ["serde", "tera"]

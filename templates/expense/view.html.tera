@@ -1,3 +1,12 @@
+{% component form_control(label, value) %}
+    <div class="form-group">
+        <label class="col-sm-2 control-label">{{ label }}</label>
+        <div class="col-sm-6">
+            <p class="form-control-static">{{ value | safe }}</p>
+        </div>
+    </div>
+{% endcomponent %}
+
 <h1 class="{% if expense.trashed_at %}trashed_at{% endif %}">
     {% if expense.url is defined %}
         <a href="{{ expense.url }}">{{ expense.name }}</a>
@@ -15,21 +24,21 @@
     </div>
 
     {% if expense.serial %}
-        {{ macros::form_control(label="N° série", value=expense.serial) }}
+        {{ <form_control label="N° série" value={ expense.serial } /> }}
     {% endif %}
 
     {% if expense.warranty_active %}
-        {{ macros::form_control(label="Garantie", value=expense.warranty_at | date(format="%d/%m/%Y")) }}
+        {{ <form_control label="Garantie" value={ expense.warranty_at | date(format='%d/%m/%Y') } /> }}
     {% else %}
-        {{ macros::form_control(label="Garantie", value=" <strong>terminée</strong>") }}
+        {{ <form_control label="Garantie" value=" <strong>terminée</strong>" /> }}
     {% endif %}
 
     {% if has_media(data_dir=data_dir, id=expense.id, file_type="invoice") == true %}
-        {{ macros::form_control(label="", value='<a href="/expenses/' ~ expense.id ~ '/invoice">Facture</a>') }}
+        {{ <form_control label="" value={ '<a href="/expenses/' ~ expense.id ~ '/invoice">Facture</a>' } /> }}
     {% endif %}
 
     {% if has_media(data_dir=data_dir, id=expense.id, file_type="notice") == true %}
-        {{ macros::form_control(label="", value='<a href="/expenses/' ~ expense.id ~ '/notice">Notice</a>') }}
+        {{ <form_control label="" value={ '<a href="/expenses/' ~ expense.id ~ '/notice">Notice</a>' } /> }}
     {% endif %}
 
     <div class="mb-3">

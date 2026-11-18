@@ -4,7 +4,6 @@ mod expense;
 
 use database::Database;
 use error::Error;
-use std::collections::HashMap;
 
 type Flash = rocket::response::Flash<rocket::response::Redirect>;
 type Result<T = ()> = std::result::Result<T, crate::Error>;
@@ -51,13 +50,15 @@ async fn launch() -> _ {
                 })
             },
         ))
-        .attach(rocket_dyn_templates::Template::custom(|engines| {
-            engines
-                .tera
-                .register_function("has_media", Box::new(has_media));
+        .attach(rocket_dyn_templates::Templating::try_init(|engines| {
+            engines.tera.register_filter("date", tera::date);
+            engines.tera.register_function("now", tera::now);
+            engines.tera.register_function("has_media", tera::has_media);
             engines
                 .tera
                 .register_function("pager", elephantry_extras::tera::Pager);
+
+            Ok(())
         }))
         .mount(
             "/static",
@@ -102,26 +103,25 @@ async fn index(
         String::new()
     };
 
-    let mut context = tera::Context::new();
-    context.insert("base_url", &base_url);
-    context.insert("data_dir", &data_dir.0);
-    context.insert("pager", &pager);
-    context.insert("q", &params.q);
-    context.insert(
-        "flash",
-        &flash.map(|x| (x.kind().to_string(), x.message().to_string())),
-    );
+    let context = rocket_dyn_templates::context! {
+        base_url: &base_url,
+        data_dir: &data_dir.0,
+        pager: &pager,
+        q: &params.q,
+        flash,
+    };
 
-    let template = rocket_dyn_templates::Template::render("expense/list", context.into_json());
+    let template = rocket_dyn_templates::Template::render("expense/list.html", &context);
 
     Ok(template)
 }
 
 #[rocket::get("/expenses/add")]
 async fn add(database: Database) -> Result<Response> {
-    let mut context = tera::Context::new();
-    context.insert("shops", &database.shops().await?);
-    let template = rocket_dyn_templates::Template::render("expense/edit", context.into_json());
+    let context = rocket_dyn_templates::context! {
+        shops: &database.shops().await?,
+    };
+    let template = rocket_dyn_templates::Template::render("expense/edit.html", &context);
 
     Ok(template)
 }
@@ -140,9 +140,11 @@ async fn edit(database: Database, id: i32) -> Result<Option<Response>> {
     let Some(expense) = database.get(id).await? else {
         return Ok(None);
     };
-    let mut context = tera::Context::from_serialize(expense)?;
-    context.insert("shops", &database.shops().await?);
-    let template = rocket_dyn_templates::Template::render("expense/edit", context.into_json());
+    let context = rocket_dyn_templates::context! {
+        shops: &database.shops().await?,
+        expense,
+    };
+    let template = rocket_dyn_templates::Template::render("expense/edit.html", &context);
 
     Ok(Some(template))
 }
@@ -258,24 +260,29 @@ fn media_path(data_dir: &str, id: i32, file_type: &str) -> std::path::PathBuf {
     std::path::PathBuf::from(&filename)
 }
 
-fn has_media(args: &HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
-    let data_dir = match args.get("data_dir") {
-        Some(val) => tera::from_value::<String>(val.clone())?,
-        None => return Err("oops".into()),
-    };
+mod tera {
+    pub fn date(val: &str, kwargs: tera::Kwargs, _: &tera::State) -> tera::TeraResult<String> {
+        let format = kwargs.must_get::<&str>("format")?;
 
-    let id = match args.get("id") {
-        Some(val) => tera::from_value::<i32>(val.clone())?,
-        None => return Err("oops".into()),
-    };
+        let parser = jiff::fmt::temporal::DateTimeParser::new();
+        let date = parser.parse_datetime(val).unwrap();
 
-    let file_type = match args.get("file_type") {
-        Some(val) => tera::from_value::<String>(val.clone())?,
-        None => return Err("oops".into()),
-    };
+        Ok(date.strftime(format).to_string())
+    }
 
-    let exists = media_path(&data_dir, id, &file_type).exists();
-    let value = tera::to_value(exists)?;
+    pub fn now(_: tera::Kwargs, _: &tera::State) -> tera::TeraResult<String> {
+        let now = jiff::ZonedDateTime::now();
 
-    Ok(value)
+        Ok(now.to_string())
+    }
+
+    pub fn has_media(kwargs: tera::Kwargs, _: &tera::State<'_>) -> tera::TeraResult<bool> {
+        let data_dir = kwargs.must_get::<&str>("data_dir")?;
+        let id = kwargs.must_get::<i32>("id")?;
+        let file_type = kwargs.must_get::<&str>("file_type")?;
+
+        let exists = super::media_path(data_dir, id, file_type).exists();
+
+        Ok(exists)
+    }
 }

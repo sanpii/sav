@@ -12,13 +12,11 @@ pub enum Error {
 
 impl<'r, 'o: 'r> rocket::response::Responder<'r, 'o> for Error {
     fn respond_to(self, request: &rocket::Request) -> rocket::response::Result<'o> {
-        let mut context = tera::Context::new();
+        let context = rocket_dyn_templates::context! {
+            message: &self.to_string(),
+        };
 
-        if cfg!(debug_assertions) {
-            context.insert("message", &self.to_string());
-        }
-
-        let template = rocket_dyn_templates::Template::render("error", context.into_json());
+        let template = rocket_dyn_templates::Template::render("error.html", &context);
         let html = rocket::response::content::RawHtml(template);
 
         let mut response = html.respond_to(request)?;
